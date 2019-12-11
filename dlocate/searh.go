@@ -1,22 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 )
 
-type fileInfo struct {
-	FileName string
-	ModTime  time.Time
-}
-
-func visit(files *[]fileInfo) filepath.WalkFunc {
+func visit(files *[]FileInfo) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Warnf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
@@ -25,7 +16,7 @@ func visit(files *[]fileInfo) filepath.WalkFunc {
 		fileName := info.Name()
 		modTime := info.ModTime()
 		if !info.IsDir() {
-			fileinfo := fileInfo{fileName, modTime}
+			fileinfo := FileInfo{fileName, modTime}
 
 			log.WithFields(log.Fields{
 				"fileName": fileName,
@@ -42,19 +33,14 @@ func visit(files *[]fileInfo) filepath.WalkFunc {
 	}
 }
 
-func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("you must provide search directory")
-		return
-	}
+// WalkSearch search function using Walk utility.
+func WalkSearch(root string) []FileInfo {
 
-	var files []fileInfo
-	root := os.Args[1]
+	var files []FileInfo
 	err := filepath.Walk(root, visit(&files))
 	if err != nil {
 		panic(err)
 	}
-	b, err := json.MarshalIndent(files, "", "\t")
-	_ = ioutil.WriteFile("explored_files.json", b, 0644)
 
+	return files
 }
