@@ -2,17 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"flag"
 	"io/ioutil"
-	"os"
 )
 
+var destination = flag.String("d", ".", "the search directory")
+
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("you must provide search directory")
-		return
-	}
-	root := os.Args[1]
+	flag.Parse()
+	root := *destination
 
 	var files []FileInfo
 	files = WalkSearch(root)
