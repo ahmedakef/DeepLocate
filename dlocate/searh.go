@@ -18,6 +18,10 @@ func getType(info os.FileInfo) FileType {
 		fileType = "audio"
 	} else if extention == "mp4" {
 		fileType = "video"
+	} else if extention == "pdf" {
+		fileType = "book"
+	} else if extention == "jpg" {
+		fileType = "photo"
 	} else if info.IsDir() {
 		fileType = "directory"
 	}
