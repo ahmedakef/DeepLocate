@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -21,13 +22,13 @@ func visit(files *[]FileInfo) filepath.WalkFunc {
 			log.WithFields(log.Fields{
 				"fileName": fileName,
 				"modTime":  modTime,
-			}).Info("enter this file")
+			}).Debug("enter this file")
 			*files = append(*files, fileinfo)
 		} else {
 			log.WithFields(log.Fields{
 				"fileName": fileName,
 				"modTime":  modTime,
-			}).Info("enter this directory")
+			}).Debug("enter this directory")
 		}
 		return nil
 	}
@@ -43,4 +44,20 @@ func WalkSearch(root string) []FileInfo {
 	}
 
 	return files
+}
+
+func find(word, root string) []FileInfo {
+	files := WalkSearch(root)
+	var matchedFiles []FileInfo
+	for _, file := range files {
+		if strings.Contains(file.FileName, word) {
+			matchedFiles = append(matchedFiles, file)
+			log.WithFields(log.Fields{
+				"fileName": file.FileName,
+				"modTime":  file.ModTime,
+			}).Info("found this file matched")
+		}
+	}
+
+	return matchedFiles
 }
