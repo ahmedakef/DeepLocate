@@ -8,6 +8,23 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+func getType(info os.FileInfo) FileType {
+	dot := strings.LastIndex(info.Name(), ".")
+	extention := info.Name()[dot+1:]
+
+	var fileType FileType
+
+	if extention == "mp3" {
+		fileType = "audio"
+	} else if extention == "mp4" {
+		fileType = "video"
+	} else if info.IsDir() {
+		fileType = "directory"
+	}
+
+	return fileType
+}
+
 func visit(files *[]FileInfo) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -16,8 +33,10 @@ func visit(files *[]FileInfo) filepath.WalkFunc {
 		}
 		fileName := info.Name()
 		modTime := info.ModTime()
+		fileType := getType(info)
+
 		if !info.IsDir() {
-			fileinfo := FileInfo{fileName, modTime}
+			fileinfo := FileInfo{fileName, modTime, fileType}
 
 			log.WithFields(log.Fields{
 				"fileName": fileName,
