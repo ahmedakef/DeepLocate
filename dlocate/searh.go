@@ -40,7 +40,7 @@ func visit(files *[]FileInfo) filepath.WalkFunc {
 		fileType := getType(info)
 
 		if !info.IsDir() {
-			fileinfo := FileInfo{fileName, modTime, fileType}
+			fileinfo := FileInfo{fileName, path, modTime, fileType}
 
 			log.WithFields(log.Fields{
 				"fileName": fileName,
