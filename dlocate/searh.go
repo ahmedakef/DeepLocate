@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -70,10 +72,18 @@ func WalkSearch(root string) []FileInfo {
 }
 
 func find(word, root string) []FileInfo {
-	files := WalkSearch(root)
+	content, err := ioutil.ReadFile("files.json")
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+	var files []FileInfo
+	json.Unmarshal(content, &files)
+
 	var matchedFiles []FileInfo
 	for _, file := range files {
-		if strings.Contains(file.FileName, word) {
+		if strings.Contains(file.FileName, word) &&
+			strings.HasPrefix(file.LinuxPath, root) {
 			matchedFiles = append(matchedFiles, file)
 			log.WithFields(log.Fields{
 				"fileName": file.FileName,
