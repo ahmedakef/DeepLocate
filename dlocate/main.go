@@ -20,9 +20,14 @@ func main() {
 	word := *searchWord
 
 	var matchedFiles []FileInfo
-	matchedFiles = find(word, root)
+	//matchedFiles = find(word, root)
 
 	b, _ := json.MarshalIndent(matchedFiles, "", "\t")
 	_ = ioutil.WriteFile("explored_files.json", b, 0644)
 
+	//indexLucene(root)
+	//findLucene(word)
+
+	indexBleve(root)
+	findBleve(word)
 }
