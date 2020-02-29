@@ -21,21 +21,20 @@ func newSignatureFileH() SignatureFile {
 	return SignatureFile{len: hierarchicalSignatureFileCap, data: *big.NewInt(0)}
 }
 
-func (sf SignatureFile) or(sf2 SignatureFile) SignatureFile {
+func (sf *SignatureFile) or(sf2 SignatureFile) {
 	for i := 0; i < sf2.len; i++ {
 		if sf2.getBit(i) {
 			sf.setBit(i)
 		}
 	}
-	return sf
 }
 
-func (sf SignatureFile) setBit(index int) {
+func (sf *SignatureFile) setBit(index int) {
 	index = index % sf.len
 	sf.data.SetBit(&sf.data, index, 1)
 }
 
-func (sf SignatureFile) getBit(index int) bool {
+func (sf *SignatureFile) getBit(index int) bool {
 	index = index % sf.len
 	return sf.data.Bit(index) == 1
 }
