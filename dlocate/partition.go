@@ -7,13 +7,13 @@ import (
 
 // Partition conatins basic info about partitions
 type Partition struct {
-	index       int
-	root        string
-	directories []string
-	filesNumber int
-	children    []int
-	extenstion  SignatureFile
-	extenstionH SignatureFile
+	Index       int
+	Root        string
+	Directories []string
+	FilesNumber int
+	Children    []int
+	Extenstion  SignatureFile
+	ExtenstionH SignatureFile
 	//TODO implement versioning
 	//TODO add metadata partition pointer
 	//TODO add content partition pointer
@@ -21,14 +21,14 @@ type Partition struct {
 
 // NewPartition creates new partition with 0 files and 0 children
 func NewPartition(index int, root string) Partition {
-	return Partition{index: index, root: root, filesNumber: 0, extenstion: newSignatureFile(), extenstionH: newSignatureFileH()}
+	return Partition{Index: index, Root: root, FilesNumber: 0, Extenstion: newSignatureFile(), ExtenstionH: newSignatureFileH()}
 }
 
 func (p *Partition) addDir(path string) {
 	files := ListFiles(path)
 
 	cnt := 0
-	p.directories = append(p.directories, p.getRelativePath(path))
+	p.Directories = append(p.Directories, p.getRelativePath(path))
 	for _, file := range files {
 		if !file.IsDir() {
 			cnt++
@@ -36,39 +36,39 @@ func (p *Partition) addDir(path string) {
 		}
 		//TODO update metadata and content partitions
 	}
-	p.filesNumber += cnt
-	p.extenstionH.or(p.extenstion)
+	p.FilesNumber += cnt
+	p.ExtenstionH.or(p.Extenstion)
 }
 
 func (p *Partition) addExtenstion(file os.FileInfo) {
 	extension := getFileExtenstion(file.Name())
 	index := getExtenstionIndex(extension)
-	p.extenstion.setBit(index)
+	p.Extenstion.setBit(index)
 }
 
 func (p *Partition) getRelativePath(path string) string {
-	return path[len(p.root):]
+	return path[len(p.Root):]
 }
 
 func (p *Partition) addChild(c *Partition) {
-	p.extenstionH.or(c.extenstionH)
-	p.children = append(p.children, c.index)
+	p.ExtenstionH.or(c.ExtenstionH)
+	p.Children = append(p.Children, c.Index)
 }
 
 func (p *Partition) hasExtenstion(index int) bool {
-	return p.extenstion.getBit(index)
+	return p.Extenstion.getBit(index)
 }
 
 func (p *Partition) hasExtenstionH(index int) bool {
-	return p.extenstionH.getBit(index)
+	return p.ExtenstionH.getBit(index)
 }
 
 func (p *Partition) printPartition() {
-	fmt.Println(p.index)
-	fmt.Println(p.root)
-	fmt.Println(p.filesNumber)
-	fmt.Println(p.children)
-	//fmt.Println(p.directories)
-	//fmt.Println(p.extenstion)
-	//fmt.Println(p.extenstionH)
+	fmt.Println(p.Index)
+	fmt.Println(p.Root)
+	fmt.Println(p.FilesNumber)
+	fmt.Println(p.Children)
+	//fmt.Println(p.Directories)
+	//fmt.Println(p.Extenstion)
+	//fmt.Println(p.ExtenstionH)
 }

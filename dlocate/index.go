@@ -65,7 +65,7 @@ func indexDir(path string, root *Partition) {
 	for _, file := range files {
 		if file.IsDir() {
 			dirPath := path + "\\" + file.Name()
-			if root.filesNumber >= filesLimit {
+			if root.FilesNumber >= filesLimit {
 				child := NewPartition(getNextPartitionIndex(), dirPath)
 				indexDir(dirPath, &child)
 				partitions = append(partitions, &child)
@@ -85,5 +85,11 @@ func startIndexing(path string) {
 
 	for _, partition := range partitions {
 		partition.printPartition()
+		savePartitionGob(partition)
+	}
+
+	for _, partition := range partitions {
+		p := readPartitionGob(partition.Index)
+		p.printPartition()
 	}
 }
