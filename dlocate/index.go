@@ -2,15 +2,15 @@ package main
 
 import (
 	"os"
-	"strings"
 
+	utils "./osutils"
 	log "github.com/Sirupsen/logrus"
 )
 
 const filesLimit = 100
 
 // ListFiles return a list of files and folders directly under the given dir
-func ListFiles(path string) []os.FileInfo {
+func ListFiles(path string) []utils.FileMetadata {
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
@@ -20,19 +20,13 @@ func ListFiles(path string) []os.FileInfo {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return files
-}
 
-func getDirName(path string) string {
-	index := strings.LastIndex(path, "\\")
-	dir := path[index+1:]
-	return dir
-}
+	var filesData []utils.FileMetadata
+	for _, file := range files {
+		filesData = append(filesData, utils.GetFileInfo(file, path))
+	}
 
-func getFileExtenstion(name string) string {
-	dot := strings.LastIndex(name, ".")
-	extention := name[dot+1:]
-	return extention
+	return filesData
 }
 
 var curIndex = 0
@@ -40,7 +34,7 @@ var partitions []*Partition
 var curExtensionIndex = -1
 var extensions map[string]int
 
-func getExtenstionIndex(name string) int {
+func getExtensionIndex(name string) int {
 	index, ok := extensions[name]
 	if !ok {
 		index = getNextExtensionIndex()
@@ -63,15 +57,14 @@ func indexDir(path string, root *Partition) {
 	files := ListFiles(path)
 	root.addDir(path)
 	for _, file := range files {
-		if file.IsDir() {
-			dirPath := path + "\\" + file.Name()
+		if file.IsDir {
 			if root.FilesNumber >= filesLimit {
-				child := NewPartition(getNextPartitionIndex(), dirPath)
-				indexDir(dirPath, &child)
+				child := NewPartition(getNextPartitionIndex(), file.Path)
+				indexDir(file.Path, &child)
 				partitions = append(partitions, &child)
 				root.addChild(&child)
 			} else {
-				indexDir(dirPath, root)
+				indexDir(file.Path, root)
 			}
 		}
 	}

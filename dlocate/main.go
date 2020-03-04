@@ -23,11 +23,5 @@ func main() {
 	//b, _ := json.MarshalIndent(matchedFiles, "", "\t")
 	//_ = ioutil.WriteFile("explored_files.json", b, 0644)
 
-	//indexLucene(root)
-	//findLucene(word)
-
-	//indexBleve(root)
-	//findBleve(word)
-
 	startIndexing(root)
 }

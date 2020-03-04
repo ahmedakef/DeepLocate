@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 )
 
 // Partition conatins basic info about partitions
@@ -30,19 +29,19 @@ func (p *Partition) addDir(path string) {
 	cnt := 0
 	p.Directories = append(p.Directories, p.getRelativePath(path))
 	for _, file := range files {
-		if !file.IsDir() {
+		if !file.IsDir {
 			cnt++
-			p.addExtenstion(file)
+			p.addExtension(file.Extension)
 		}
+
 		//TODO update metadata and content partitions
 	}
 	p.FilesNumber += cnt
 	p.ExtenstionH.or(p.Extenstion)
 }
 
-func (p *Partition) addExtenstion(file os.FileInfo) {
-	extension := getFileExtenstion(file.Name())
-	index := getExtenstionIndex(extension)
+func (p *Partition) addExtension(extension string) {
+	index := getExtensionIndex(extension)
 	p.Extenstion.setBit(index)
 }
 
