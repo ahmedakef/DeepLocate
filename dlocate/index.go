@@ -77,11 +77,13 @@ func startIndexing(path string) {
 	indexDir(path, &root)
 
 	for _, partition := range partitions {
+		log.Debugf("start saving Partition %v\n", partition.Index)
 		partition.printPartition()
 		savePartitionGob(partition)
 	}
 
 	for _, partition := range partitions {
+		log.Debugf("start reading Partition %v\n", partition.Index)
 		p := readPartitionGob(partition.Index)
 		p.printPartition()
 	}

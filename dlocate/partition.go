@@ -1,8 +1,6 @@
 package main
 
-import (
-	"fmt"
-)
+import log "github.com/Sirupsen/logrus"
 
 // Partition conatins basic info about partitions
 type Partition struct {
@@ -63,11 +61,14 @@ func (p *Partition) hasExtenstionH(index int) bool {
 }
 
 func (p *Partition) printPartition() {
-	fmt.Println(p.Index)
-	fmt.Println(p.Root)
-	fmt.Println(p.FilesNumber)
-	fmt.Println(p.Children)
-	//fmt.Println(p.Directories)
-	//fmt.Println(p.Extenstion)
-	//fmt.Println(p.ExtenstionH)
+	log.WithFields(log.Fields{
+		"Index":       p.Index,
+		"Root":        p.Root,
+		"FilesNumber": p.FilesNumber,
+		"Children":    p.Children,
+		// "Directories": p.Directories,
+		// "Extenstion":  p.Extenstion,
+		// "ExtenstionH": p.ExtenstionH,
+	}).Infof("partition %v info :", p.Index)
+
 }

@@ -12,7 +12,7 @@ var searchWord = flag.String("s", ".", "the search word")
 
 func main() {
 
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 
 	flag.Parse()
 	root := *destination
