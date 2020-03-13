@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"io/ioutil"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -18,22 +16,13 @@ func main() {
 
 	flag.Parse()
 	root := *destination
-	word := *searchWord
-	operation := *operation
+	//word := *searchWord
 
-	if operation == "index" {
-		var Files []FileInfo
-		log.Info(root)
-		Files = WalkSearch(root)
-		b, _ := json.MarshalIndent(Files, "", "\t")
-		_ = ioutil.WriteFile("files.json", b, 0644)
-		return
-	}
+	//var matchedFiles []FileInfo
+	//matchedFiles = find(word, root)
 
-	var matchedFiles []FileInfo
-	matchedFiles = find(word, root)
+	//b, _ := json.MarshalIndent(matchedFiles, "", "\t")
+	//_ = ioutil.WriteFile("explored_files.json", b, 0644)
 
-	b, _ := json.MarshalIndent(matchedFiles, "", "\t")
-	_ = ioutil.WriteFile("explored_files.json", b, 0644)
-
+	startIndexing(root)
 }
