@@ -2,13 +2,14 @@ package main
 
 import (
 	"flag"
+	"path/filepath"
 
 	log "github.com/Sirupsen/logrus"
 )
 
-var operation = flag.String("o", "search", "the operation to do (index or search")
-var destination = flag.String("d", ".", "the search directory")
-var searchWord = flag.String("s", ".", "the search word")
+var operation = flag.String("o", "index", "the operation to do (index or search")
+var destination = flag.String("d", "./", "the search directory")
+var searchWord = flag.String("s", "", "the search word")
 
 func main() {
 
@@ -16,13 +17,18 @@ func main() {
 
 	flag.Parse()
 	root := *destination
-	//word := *searchWord
+	root = "/home/ahmed/Downloads/cloud computing/"
+	// remove trailling backslash
+	if filepath.ToSlash(root)[len(root)-1] == '/' {
+		root = root[:len(root)-1]
+	}
 
-	//var matchedFiles []FileInfo
-	//matchedFiles = find(word, root)
+	op := *operation
+	if op == "index" {
+		startIndexing(root)
+	} else if op == "search" {
+		// word := *searchWord
 
-	//b, _ := json.MarshalIndent(matchedFiles, "", "\t")
-	//_ = ioutil.WriteFile("explored_files.json", b, 0644)
+	}
 
-	startIndexing(root)
 }
