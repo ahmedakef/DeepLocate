@@ -71,7 +71,7 @@ func WalkSearch(root string) []FileInfo {
 	return files
 }
 
-func find(word, root string) []FileInfo {
+func findInJSON(word, root string) []FileInfo {
 	content, err := ioutil.ReadFile("files.json")
 	if err != nil {
 		log.Fatal(err)
