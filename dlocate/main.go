@@ -27,7 +27,8 @@ func main() {
 	if op == "index" {
 		startIndexing(root)
 	} else if op == "search" {
-		// word := *searchWord
+		word := *searchWord
+		find(word, root)
 
 	}
 

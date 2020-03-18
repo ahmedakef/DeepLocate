@@ -83,8 +83,8 @@ func readPartitionGob(index int) Partition {
 
 func saveDirectoryPartition(directoryPartition *DirectoryPartition) {
 
-	directoryPartitionPath := "indexFiles/directoryPartition.gob"
-	err := saveGob(directoryPartitionPath, directoryPartition)
+	path := "indexFiles/directoryPartition.gob"
+	err := saveGob(path, directoryPartition)
 
 	if err != nil {
 		log.Errorf("Error while creating directoryPartitio file")
@@ -93,7 +93,7 @@ func saveDirectoryPartition(directoryPartition *DirectoryPartition) {
 }
 
 func readDirectoryPartitionGob() DirectoryPartition {
-	path := "indexFiles/partitions/directoryPartition.gob"
+	path := "indexFiles/directoryPartition.gob"
 
 	var directoryPartition DirectoryPartition
 	err := readGob(path, &directoryPartition)
