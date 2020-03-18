@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -108,7 +109,14 @@ func readDirectoryPartitionGob(index int) DirectoryPartition {
 }
 
 // SaveAsJSON save aby datatype as json for better reading while debugging
-func SaveAsJSON(Data interface{}, FilePath string) {
-	b, _ := json.MarshalIndent(Data, "", "\t")
-	_ = ioutil.WriteFile(filepath.ToSlash(FilePath), b, 0644)
+func SaveAsJSON(data interface{}, filePath string) {
+	// create folder if not exits
+	lastslash := strings.LastIndex(filePath, "/")
+	directoryPath := filePath[:lastslash]
+	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
+		os.MkdirAll(directoryPath, os.ModePerm)
+	}
+
+	b, _ := json.MarshalIndent(data, "", "\t")
+	_ = ioutil.WriteFile(filepath.ToSlash(filePath), b, 0644)
 }

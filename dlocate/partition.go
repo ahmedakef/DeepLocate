@@ -29,7 +29,7 @@ func (p *Partition) addDir(path string) {
 	p.Directories = append(p.Directories, p.getRelativePath(path))
 	for _, file := range files {
 		if !file.IsDir {
-			p.FilePaths = append(p.FilePaths, file.Path)
+			p.FilePaths = append(p.FilePaths, p.getRelativePath(file.Path))
 			cnt++
 			p.addExtension(file.Extension)
 		}
