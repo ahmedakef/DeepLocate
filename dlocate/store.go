@@ -13,31 +13,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-func savePartitionGob(partition *Partition) {
-	partition.Root = filepath.ToSlash(partition.Root)
-	partitionsPath := "indexFiles/partitions/"
-	if _, err := os.Stat(partitionsPath); os.IsNotExist(err) {
-		os.MkdirAll(partitionsPath, os.ModePerm)
-	}
-
-	// FromSlash converts / to the specific file system separator
-	dataFile, err := os.Create(filepath.FromSlash("indexFiles/partitions/p" + strconv.Itoa(partition.Index) + ".gob"))
-
-	if err != nil {
-		log.Errorf("Error while storing index for partition %v: %v\n", partition.Index, err)
-		os.Exit(1)
-	}
-
-	var buf io.Writer = dataFile
-	//buf = gzip.NewWriter(dataFile)
-	enc := gob.NewEncoder(buf)
-	enc.Encode(partition)
-
-	dataFile.Close()
-}
-
-func readPartitionGob(index int) Partition {
-	dataFile, err := os.Open(filepath.FromSlash("indexFiles/partitions/p" + strconv.Itoa(index) + ".gob"))
+func readGob(path string, object interface{}) error {
+	dataFile, err := os.Open(filepath.FromSlash(path))
 
 	if err != nil {
 		log.Error(err)
@@ -49,16 +26,57 @@ func readPartitionGob(index int) Partition {
 	var buf io.Reader = dataFile
 	//buf, _ = gzip.NewReader(dataFile)
 	dec := gob.NewDecoder(buf)
+	err = dec.Decode(object)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func saveGob(path string, object interface{}) error {
+
+	// FromSlash converts / to the specific file system separator
+	dataFile, err := os.Create(filepath.FromSlash(path))
+	if err != nil {
+		return err
+	}
+	defer dataFile.Close()
+
+	var buf io.Writer = dataFile
+	//buf = gzip.NewWriter(dataFile)
+	enc := gob.NewEncoder(buf)
+	enc.Encode(object)
+
+	return nil
+}
+
+func savePartitionGob(partition *Partition) {
+	partition.Root = filepath.ToSlash(partition.Root)
+	partitionsPath := filepath.FromSlash("indexFiles/partitions/")
+	if _, err := os.Stat(partitionsPath); os.IsNotExist(err) {
+		os.MkdirAll(partitionsPath, os.ModePerm)
+	}
+
+	path := "indexFiles/partitions/p" + strconv.Itoa(partition.Index) + ".gob"
+	err := saveGob(path, partition)
+
+	if err != nil {
+		log.Errorf("Error while storing index for partition %v: %v\n", partition.Index, err)
+		os.Exit(1)
+	}
+
+}
+
+func readPartitionGob(index int) Partition {
+	path := "indexFiles/partitions/p" + strconv.Itoa(index) + ".gob"
 
 	var partition Partition
-
-	err = dec.Decode(&partition)
-
+	err := readGob(path, &partition)
 	if err != nil {
 		log.Errorf("Error while reading index for partition %q: %v\n", index, err)
 		os.Exit(1)
 	}
-
 	partition.Root = filepath.FromSlash(partition.Root)
 	return partition
 }
@@ -66,40 +84,19 @@ func readPartitionGob(index int) Partition {
 func saveDirectoryPartition(directoryPartition *DirectoryPartition) {
 
 	directoryPartitionPath := "indexFiles/directoryPartition.gob"
-
-	// FromSlash converts / to the specific file system separator
-	dataFile, err := os.Create(filepath.FromSlash(directoryPartitionPath))
+	err := saveGob(directoryPartitionPath, directoryPartition)
 
 	if err != nil {
 		log.Errorf("Error while creating directoryPartitio file")
 		os.Exit(1)
 	}
-	defer dataFile.Close()
-
-	var buf io.Writer = dataFile
-	//buf = gzip.NewWriter(dataFile)
-	enc := gob.NewEncoder(buf)
-	enc.Encode(directoryPartition)
-
 }
 
-func readDirectoryPartitionGob(index int) DirectoryPartition {
-	dataFile, err := os.Open(filepath.FromSlash("indexFiles/partitions/directoryPartition.gob"))
-
-	if err != nil {
-		log.Error(err)
-		os.Exit(1)
-	}
-	// ensure to close the file after the fuction end
-	defer dataFile.Close()
-
-	var buf io.Reader = dataFile
-	dec := gob.NewDecoder(buf)
+func readDirectoryPartitionGob() DirectoryPartition {
+	path := "indexFiles/partitions/directoryPartition.gob"
 
 	var directoryPartition DirectoryPartition
-
-	err = dec.Decode(&directoryPartition)
-
+	err := readGob(path, &directoryPartition)
 	if err != nil {
 		log.Error("Error while reading directoryPartition")
 		os.Exit(1)
