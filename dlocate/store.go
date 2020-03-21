@@ -105,6 +105,31 @@ func readDirectoryPartitionGob() DirectoryPartition {
 	return directoryPartition
 }
 
+func savePartitionFilesGob(partitionIndex int, partitionFiles []string) {
+
+	path := "indexFiles/filepaths/f" + strconv.Itoa(partitionIndex) + ".gob"
+	err := saveGob(path, partitionFiles)
+
+	if err != nil {
+		log.Errorf("Error while creating partitionfiles file")
+		os.Exit(1)
+	}
+}
+
+func readPartitionFilesGob(partitionIndex int) []string {
+	// TODO return error and results and check the error outside
+	path := "indexFiles/filepaths/f" + strconv.Itoa(partitionIndex) + ".gob"
+
+	var partitionFiles []string
+	err := readGob(path, &partitionFiles)
+	if err != nil {
+		log.Error("Error while reading partitionfiles")
+		os.Exit(1)
+	}
+
+	return partitionFiles
+}
+
 // SaveAsJSON save aby datatype as json for better reading while debugging
 func SaveAsJSON(data interface{}, filePath string) {
 	// create folder if not exits
