@@ -75,6 +75,7 @@ func indexDir(path string, root *Partition) {
 	}
 	// save files inside the partition
 	SaveAsJSON(root.FilePaths, "indexFiles/filepaths/f"+strconv.Itoa(root.Index)+".json")
+	savePartitionFilesGob(root.Index, root.FilePaths)
 	SaveAsJSON(root, "indexFiles/partitions/p"+strconv.Itoa(root.Index)+".json")
 }
 
