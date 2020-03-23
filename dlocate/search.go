@@ -36,7 +36,7 @@ func getPartitionFiles(partitionIndex int, root string) []string {
 func find(word, root string) []string {
 	var directoryPartition DirectoryPartition
 
-	directoryPartition = readDirectoryPartitionGob()
+	directoryPartition = getDirectoryPartition()
 	partitionIndex := directoryPartition.getDirectoryPartition(root)
 
 	// get all files names in the partition and its children

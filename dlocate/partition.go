@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	structure "./dataStructures"
+	utils "./osutils"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -32,7 +33,7 @@ func NewPartition(index int, root string) Partition {
 }
 
 func (p *Partition) addDir(path string) {
-	files := ListFiles(path)
+	files := utils.ListFiles(path)
 	cnt := 0
 	p.Directories = append(p.Directories, p.getRelativePath(path))
 	for _, file := range files {
@@ -49,7 +50,7 @@ func (p *Partition) addDir(path string) {
 }
 
 func (p *Partition) addExtension(extension string) {
-	index := getExtensionIndex(extension)
+	index := indexInfo.getExtensionIndex(extension)
 	p.Extenstion.setBit(index)
 }
 

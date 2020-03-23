@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"path/filepath"
-	"strconv"
 
 	utils "./osutils"
 	log "github.com/Sirupsen/logrus"
@@ -11,61 +10,53 @@ import (
 
 const filesLimit = 100
 
-// ListFiles return a list of files and folders directly under the given dir
-func ListFiles(path string) []utils.FileMetadata {
-
-	f, err := os.Open(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	files, err := f.Readdir(-1)
-	f.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var filesData []utils.FileMetadata
-	for _, file := range files {
-		filesData = append(filesData, utils.GetFileInfo(file, path))
-	}
-
-	return filesData
-}
-
-var curIndex = 0
-var partitions []*Partition
-var curExtensionIndex = -1
-var extensions map[string]int
 var directoryPartition DirectoryPartition
+var indexInfo IndexInfo
 
-func getExtensionIndex(name string) int {
-	index, ok := extensions[name]
-	if !ok {
-		index = getNextExtensionIndex()
-		extensions[name] = index
+func startIndexing(path string) {
+	//load index and check for repeated indexing
+	indexInfo = getIndexInfo()
+	indexInfo.loadRoots()
+	if isRoot(path) != -1 {
+		return
 	}
-	return index
+
+	indexPath(path)
+
+	indexInfo.savePartitions()
+	directoryPartition.saveAsGob()
+	indexInfo.saveAsGob()
+
+	for _, partition := range indexInfo.partitions {
+		log.Debugf("start reading Partition %v\n", partition.Index)
+		p := readPartitionGob(partition.Index)
+		p.printPartition()
+	}
 }
 
-func getNextExtensionIndex() int {
-	curExtensionIndex++
-	return curExtensionIndex
-}
+func indexPath(path string) {
+	root := indexInfo.addRoot(path)
+	directoryPartition = getDirectoryPartition()
+	directoryPartition[filepath.ToSlash(path)] = root.Index
 
-func getNextPartitionIndex() int {
-	curIndex++
-	return curIndex
+	indexDir(path, root)
 }
 
 func indexDir(path string, root *Partition) {
-	files := ListFiles(path)
+	files := utils.ListFiles(path)
 	root.addDir(path)
 	for _, file := range files {
 		if file.IsDir {
+			indexedUnder := isRoot(file.Path)
+			if indexedUnder != -1 {
+				root.addChild(indexInfo.partitions[indexedUnder])
+				indexInfo.removeRoot(indexedUnder)
+				continue
+			}
 			if root.FilesNumber >= filesLimit {
-				child := NewPartition(getNextPartitionIndex(), file.Path)
+				child := NewPartition(indexInfo.getNextPartitionIndex(), file.Path)
 				indexDir(file.Path, &child)
-				partitions = append(partitions, &child)
+				indexInfo.addPartition(&child)
 				directoryPartition[filepath.ToSlash(file.Path)] = child.Index
 				root.addChild(&child)
 			} else {
@@ -75,38 +66,34 @@ func indexDir(path string, root *Partition) {
 	}
 }
 
-func startIndexing(path string) {
-	root := NewPartition(0, path)
-	partitions = append(partitions, &root)
-	extensions = make(map[string]int)
-	directoryPartition = make(map[string]int)
-	directoryPartition[filepath.ToSlash(path)] = root.Index
-	indexDir(path, &root)
-
-	for _, partition := range partitions {
-		log.Debugf("start saving Partition %v\n", partition.Index)
-		partition.printPartition()
-
-		partition.saveAsGob()
-		SaveAsJSON(partition, "indexFiles/partitions/p"+strconv.Itoa(partition.Index)+".json")
-
-		// save files inside the partition
-		savePartitionFilesGob(partition.Index, partition.filePaths)
-		SaveAsJSON(partition.filePaths, "indexFiles/filepaths/f"+strconv.Itoa(partition.Index)+".json")
-
-		// save metadata tree inside the partition
-		savePartitionMetaGob(partition.Index, partition.metadataTree)
-		SaveAsJSON(partition.filePaths, "indexFiles/metadata/m"+strconv.Itoa(partition.Index)+".json")
+func isRoot(path string) int {
+	for _, root := range indexInfo.Roots {
+		if indexInfo.partitions[root].Root == path {
+			return root
+		}
 	}
+	return -1
+}
 
-	log.Debug("start saving directoryPartition map")
-	directoryPartition.saveAsGob()
-	log.Debug("finish saving directoryPartition map")
-
-	for _, partition := range partitions {
-		log.Debugf("start reading Partition %v\n", partition.Index)
-		p := readPartitionGob(partition.Index)
-		p.printPartition()
-		break
+func clearIndex() {
+	err := os.Remove("indexFiles/directoryPartition.gob")
+	if err != nil {
+		log.Error(err)
+	}
+	err = os.Remove("indexFiles/indexInfo.gob")
+	if err != nil {
+		log.Error(err)
+	}
+	err = utils.RemoveContents("indexFiles/filepaths")
+	if err != nil {
+		log.Error(err)
+	}
+	err = utils.RemoveContents("indexFiles/metadata")
+	if err != nil {
+		log.Error(err)
+	}
+	err = utils.RemoveContents("indexFiles/partitions")
+	if err != nil {
+		log.Error(err)
 	}
 }

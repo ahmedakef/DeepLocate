@@ -18,8 +18,7 @@ func readGob(path string, object interface{}) error {
 	dataFile, err := os.Open(filepath.FromSlash(path))
 
 	if err != nil {
-		log.Error(err)
-		os.Exit(1)
+		return err
 	}
 	// ensure to close the file after the fuction end
 	defer dataFile.Close()
