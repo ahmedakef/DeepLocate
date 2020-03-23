@@ -15,7 +15,7 @@ type Partition struct {
 	Children    []int // index for children partitions
 	Extenstion  SignatureFile
 	ExtenstionH SignatureFile
-	FilePaths   []string
+	filePaths   []string
 	//TODO implement versioning
 	//TODO add metadata partition pointer
 	//TODO add content partition pointer
@@ -33,7 +33,7 @@ func (p *Partition) addDir(path string) {
 	p.Directories = append(p.Directories, p.getRelativePath(path))
 	for _, file := range files {
 		if !file.IsDir {
-			p.FilePaths = append(p.FilePaths, p.getRelativePath(file.Path))
+			p.filePaths = append(p.filePaths, p.getRelativePath(file.Path))
 			cnt++
 			p.addExtension(file.Extension)
 		}
