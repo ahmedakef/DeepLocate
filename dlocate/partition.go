@@ -1,6 +1,10 @@
 package main
 
-import log "github.com/Sirupsen/logrus"
+import (
+	"strings"
+
+	log "github.com/Sirupsen/logrus"
+)
 
 // Partition conatins basic info about partitions
 type Partition struct {
@@ -45,7 +49,29 @@ func (p *Partition) addExtension(extension string) {
 	p.Extenstion.setBit(index)
 }
 
+// dirInDirs ensures that root exits inside any of directories
+func (p *Partition) containsDir(root string) bool {
+	for _, dir := range p.Directories {
+		if strings.HasPrefix(dir+"/", root+"/") {
+			return true
+		}
+	}
+	return false
+}
+
+// inSameDirection ensures that path is parent or child of the partition path
+func (p *Partition) inSameDirection(path string) bool {
+	if len(path) > len(p.Root) {
+		return strings.HasPrefix(path, p.Root)
+	}
+	return strings.HasPrefix(p.Root, path)
+}
+
 func (p *Partition) getRelativePath(path string) string {
+	// if root is longer then it is one of path's children
+	if len(p.Root) > len(path) {
+		return ""
+	}
 	return path[len(p.Root):]
 }
 

@@ -17,20 +17,20 @@ func main() {
 
 	flag.Parse()
 	root := *destination
+	op := *operation
+
+	// root = "/home/ahmed/Downloads/cloud computing/mp1/"
+	// op = "search"
 	// remove trailling backslash
 	if filepath.ToSlash(root)[len(root)-1] == '/' {
 		root = root[:len(root)-1]
 	}
 
-	op := *operation
-	// root = "/home/ahmed/Downloads/cloud computing/"
-	// op = "search"
-
 	if op == "index" {
 		startIndexing(root)
 	} else if op == "search" {
 		word := *searchWord
-		// word = "hello"
+		// word = "run"
 		find(word, root)
 
 	}
