@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	structure "./dataStructures"
@@ -16,7 +19,7 @@ type Partition struct {
 	Children     []int // index for children partitions
 	Extenstion   SignatureFile
 	ExtenstionH  SignatureFile
-	FilePaths    []string
+	filePaths    []string
 	metadataTree structure.KDTree
 	//TODO implement versioning
 	//TODO add metadata partition pointer
@@ -34,7 +37,7 @@ func (p *Partition) addDir(path string) {
 	p.Directories = append(p.Directories, p.getRelativePath(path))
 	for _, file := range files {
 		if !file.IsDir {
-			p.FilePaths = append(p.FilePaths, p.getRelativePath(file.Path))
+			p.filePaths = append(p.filePaths, p.getRelativePath(file.Path))
 			p.metadataTree.Insert(&file)
 			cnt++
 			p.addExtension(file.Extension)
@@ -87,6 +90,36 @@ func (p *Partition) hasExtenstion(index int) bool {
 
 func (p *Partition) hasExtenstionH(index int) bool {
 	return p.ExtenstionH.getBit(index)
+}
+
+func readPartitionGob(index int) Partition {
+	path := "indexFiles/partitions/p" + strconv.Itoa(index) + ".gob"
+
+	var partition Partition
+	err := readGob(path, &partition)
+	if err != nil {
+		log.Errorf("Error while reading index for partition %q: %v\n", index, err)
+		os.Exit(1)
+	}
+	partition.Root = filepath.FromSlash(partition.Root)
+	return partition
+}
+
+func (p *Partition) saveAsGob() {
+	p.Root = filepath.ToSlash(p.Root)
+	partitionsPath := filepath.FromSlash("indexFiles/partitions/")
+	if _, err := os.Stat(partitionsPath); os.IsNotExist(err) {
+		os.MkdirAll(partitionsPath, os.ModePerm)
+	}
+
+	path := "indexFiles/partitions/p" + strconv.Itoa(p.Index) + ".gob"
+	err := saveGob(path, p)
+
+	if err != nil {
+		log.Errorf("Error while storing index for partition %v: %v\n", p.Index, err)
+		os.Exit(1)
+	}
+
 }
 
 func (p *Partition) printPartition() {
