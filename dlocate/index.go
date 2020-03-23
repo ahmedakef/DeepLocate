@@ -73,7 +73,7 @@ func indexDir(path string, root *Partition) {
 			}
 		}
 	}
-	
+
 }
 
 func startIndexing(path string) {
@@ -88,16 +88,16 @@ func startIndexing(path string) {
 		log.Debugf("start saving Partition %v\n", partition.Index)
 		partition.printPartition()
 
-		savePartitionGob(partition)
+		partition.saveAsGob()
 		SaveAsJSON(root, "indexFiles/partitions/p"+strconv.Itoa(root.Index)+".json")
 
 		// save files inside the partition
 		savePartitionFilesGob(root.Index, root.filePaths)
-		SaveAsJSON(root.filePaths, "indexFiles/filepaths/f"+strconv.Itoa(root.Index)+".json")		
+		SaveAsJSON(root.filePaths, "indexFiles/filepaths/f"+strconv.Itoa(root.Index)+".json")
 	}
 
 	log.Debug("start saving directoryPartition map")
-	saveDirectoryPartition(&directoryPartition)
+	directoryPartition.saveAsGob()
 	log.Debug("finish saving directoryPartition map")
 
 	for _, partition := range partitions {

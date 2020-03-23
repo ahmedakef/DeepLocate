@@ -6,8 +6,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-
-
 // getPartitionFiles gets files of partition and its children
 func getPartitionFiles(partitionIndex int, root string) []string {
 	partition := readPartitionGob(partitionIndex)

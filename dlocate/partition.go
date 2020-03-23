@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -86,6 +89,36 @@ func (p *Partition) hasExtenstion(index int) bool {
 
 func (p *Partition) hasExtenstionH(index int) bool {
 	return p.ExtenstionH.getBit(index)
+}
+
+func readPartitionGob(index int) Partition {
+	path := "indexFiles/partitions/p" + strconv.Itoa(index) + ".gob"
+
+	var partition Partition
+	err := readGob(path, &partition)
+	if err != nil {
+		log.Errorf("Error while reading index for partition %q: %v\n", index, err)
+		os.Exit(1)
+	}
+	partition.Root = filepath.FromSlash(partition.Root)
+	return partition
+}
+
+func (p *Partition) saveAsGob() {
+	p.Root = filepath.ToSlash(p.Root)
+	partitionsPath := filepath.FromSlash("indexFiles/partitions/")
+	if _, err := os.Stat(partitionsPath); os.IsNotExist(err) {
+		os.MkdirAll(partitionsPath, os.ModePerm)
+	}
+
+	path := "indexFiles/partitions/p" + strconv.Itoa(p.Index) + ".gob"
+	err := saveGob(path, p)
+
+	if err != nil {
+		log.Errorf("Error while storing index for partition %v: %v\n", p.Index, err)
+		os.Exit(1)
+	}
+
 }
 
 func (p *Partition) printPartition() {

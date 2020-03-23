@@ -51,61 +51,12 @@ func saveGob(path string, object interface{}) error {
 	return nil
 }
 
-func savePartitionGob(partition *Partition) {
-	partition.Root = filepath.ToSlash(partition.Root)
-	partitionsPath := filepath.FromSlash("indexFiles/partitions/")
-	if _, err := os.Stat(partitionsPath); os.IsNotExist(err) {
-		os.MkdirAll(partitionsPath, os.ModePerm)
-	}
-
-	path := "indexFiles/partitions/p" + strconv.Itoa(partition.Index) + ".gob"
-	err := saveGob(path, partition)
-
-	if err != nil {
-		log.Errorf("Error while storing index for partition %v: %v\n", partition.Index, err)
-		os.Exit(1)
-	}
-
-}
-
-func readPartitionGob(index int) Partition {
-	path := "indexFiles/partitions/p" + strconv.Itoa(index) + ".gob"
-
-	var partition Partition
-	err := readGob(path, &partition)
-	if err != nil {
-		log.Errorf("Error while reading index for partition %q: %v\n", index, err)
-		os.Exit(1)
-	}
-	partition.Root = filepath.FromSlash(partition.Root)
-	return partition
-}
-
-func saveDirectoryPartition(directoryPartition *DirectoryPartition) {
-
-	path := "indexFiles/directoryPartition.gob"
-	err := saveGob(path, directoryPartition)
-
-	if err != nil {
-		log.Errorf("Error while creating directoryPartitio file")
-		os.Exit(1)
-	}
-}
-
-func readDirectoryPartitionGob() DirectoryPartition {
-	path := "indexFiles/directoryPartition.gob"
-
-	var directoryPartition DirectoryPartition
-	err := readGob(path, &directoryPartition)
-	if err != nil {
-		log.Error("Error while reading directoryPartition")
-		os.Exit(1)
-	}
-
-	return directoryPartition
-}
-
 func savePartitionFilesGob(partitionIndex int, partitionFiles []string) {
+
+	filePathsPath := filepath.FromSlash("indexFiles/filepaths/")
+	if _, err := os.Stat(filePathsPath); os.IsNotExist(err) {
+		os.MkdirAll(filePathsPath, os.ModePerm)
+	}
 
 	path := "indexFiles/filepaths/f" + strconv.Itoa(partitionIndex) + ".gob"
 	err := saveGob(path, partitionFiles)
