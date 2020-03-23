@@ -6,15 +6,26 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+
+
 // getPartitionFiles gets files of partition and its children
-func getPartitionFiles(partitionIndex int) []string {
-	fileNames := readPartitionFilesGob(partitionIndex)
+func getPartitionFiles(partitionIndex int, root string) []string {
 	partition := readPartitionGob(partitionIndex)
+
+	// check that partition is related to the root
+	if !partition.inSameDirection(root) {
+		return []string{}
+	}
+	// check that partition have the root or its children
+	if !partition.containsDir(partition.getRelativePath(root)) {
+		return []string{}
+	}
+	fileNames := readPartitionFilesGob(partitionIndex)
 	for i, fileName := range fileNames {
 		fileNames[i] = partition.Root + fileName
 	}
 	for _, child := range partition.Children {
-		fileNames = append(fileNames, getPartitionFiles(child)...)
+		fileNames = append(fileNames, getPartitionFiles(child, root)...)
 	}
 
 	return fileNames
@@ -29,7 +40,7 @@ func find(word, root string) []string {
 	partitionIndex := directoryPartition.getDirectoryPartition(root)
 
 	// get all files names in the partition and its children
-	fileNames := getPartitionFiles(partitionIndex)
+	fileNames := getPartitionFiles(partitionIndex, root)
 
 	var matchedFiles []string
 	for _, fileName := range fileNames {
