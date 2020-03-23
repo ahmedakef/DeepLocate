@@ -89,11 +89,11 @@ func startIndexing(path string) {
 		partition.printPartition()
 
 		partition.saveAsGob()
-		SaveAsJSON(root, "indexFiles/partitions/p"+strconv.Itoa(root.Index)+".json")
+		SaveAsJSON(partition, "indexFiles/partitions/p"+strconv.Itoa(partition.Index)+".json")
 
 		// save files inside the partition
-		savePartitionFilesGob(root.Index, root.filePaths)
-		SaveAsJSON(root.filePaths, "indexFiles/filepaths/f"+strconv.Itoa(root.Index)+".json")
+		savePartitionFilesGob(partition.Index, partition.filePaths)
+		SaveAsJSON(partition.filePaths, "indexFiles/filepaths/f"+strconv.Itoa(partition.Index)+".json")
 	}
 
 	log.Debug("start saving directoryPartition map")
