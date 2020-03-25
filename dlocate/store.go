@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	structure "./dataStructures"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -17,8 +18,7 @@ func readGob(path string, object interface{}) error {
 	dataFile, err := os.Open(filepath.FromSlash(path))
 
 	if err != nil {
-		log.Error(err)
-		os.Exit(1)
+		return err
 	}
 	// ensure to close the file after the fuction end
 	defer dataFile.Close()
@@ -79,6 +79,29 @@ func readPartitionFilesGob(partitionIndex int) []string {
 	}
 
 	return partitionFiles
+}
+
+func savePartitionMetaGob(partitionIndex int, tree structure.KDTree) {
+	path := "indexFiles/metadata/m" + strconv.Itoa(partitionIndex) + ".gob"
+	err := saveGob(path, tree)
+
+	if err != nil {
+		log.Errorf("Error while creating files metadata tree")
+		os.Exit(1)
+	}
+}
+
+func readPartitionMetaGob(partitionIndex int) structure.KDTree {
+	// TODO return error and results and check the error outside
+	path := "indexFiles/metadata/m" + strconv.Itoa(partitionIndex) + ".gob"
+
+	var tree structure.KDTree
+	err := readGob(path, &tree)
+	if err != nil {
+		log.Error("Error while reading files metadata tree")
+		os.Exit(1)
+	}
+	return tree
 }
 
 // SaveAsJSON save aby datatype as json for better reading while debugging

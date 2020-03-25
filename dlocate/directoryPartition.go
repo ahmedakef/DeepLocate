@@ -30,14 +30,13 @@ func (d DirectoryPartition) getDirectoryPartition(path string) int {
 	return -1
 }
 
-func readDirectoryPartitionGob() DirectoryPartition {
+func getDirectoryPartition() DirectoryPartition {
 	path := "indexFiles/directoryPartition.gob"
 
 	var directoryPartition DirectoryPartition
 	err := readGob(path, &directoryPartition)
 	if err != nil {
-		log.Error("Error while reading directoryPartition")
-		os.Exit(1)
+		return make(map[string]int)
 	}
 
 	return directoryPartition

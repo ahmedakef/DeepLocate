@@ -6,19 +6,22 @@ import (
 	"strconv"
 	"strings"
 
+	structure "./dataStructures"
+	utils "./osutils"
 	log "github.com/Sirupsen/logrus"
 )
 
 // Partition conatins basic info about partitions
 type Partition struct {
-	Index       int
-	Root        string
-	Directories []string
-	FilesNumber int
-	Children    []int // index for children partitions
-	Extenstion  SignatureFile
-	ExtenstionH SignatureFile
-	filePaths   []string
+	Index        int
+	Root         string
+	Directories  []string
+	FilesNumber  int
+	Children     []int // index for children partitions
+	Extenstion   SignatureFile
+	ExtenstionH  SignatureFile
+	filePaths    []string
+	metadataTree structure.KDTree
 	//TODO implement versioning
 	//TODO add metadata partition pointer
 	//TODO add content partition pointer
@@ -30,25 +33,24 @@ func NewPartition(index int, root string) Partition {
 }
 
 func (p *Partition) addDir(path string) {
-	files := ListFiles(path)
-
+	files := utils.ListFiles(path)
 	cnt := 0
 	p.Directories = append(p.Directories, p.getRelativePath(path))
 	for _, file := range files {
 		if !file.IsDir {
 			p.filePaths = append(p.filePaths, p.getRelativePath(file.Path))
+			p.metadataTree.Insert(&file)
 			cnt++
 			p.addExtension(file.Extension)
 		}
-
-		//TODO update metadata and content partitions
+		//TODO content partitions
 	}
 	p.FilesNumber += cnt
 	p.ExtenstionH.or(p.Extenstion)
 }
 
 func (p *Partition) addExtension(extension string) {
-	index := getExtensionIndex(extension)
+	index := indexInfo.getExtensionIndex(extension)
 	p.Extenstion.setBit(index)
 }
 

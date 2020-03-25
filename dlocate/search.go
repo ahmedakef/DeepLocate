@@ -2,7 +2,9 @@ package main
 
 import (
 	"strings"
+	"time"
 
+	utils "./osutils"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -34,7 +36,7 @@ func getPartitionFiles(partitionIndex int, root string) []string {
 func find(word, root string) []string {
 	var directoryPartition DirectoryPartition
 
-	directoryPartition = readDirectoryPartitionGob()
+	directoryPartition = getDirectoryPartition()
 	partitionIndex := directoryPartition.getDirectoryPartition(root)
 
 	// get all files names in the partition and its children
@@ -51,4 +53,27 @@ func find(word, root string) []string {
 	}
 
 	return matchedFiles
+}
+
+func metaSearch() []string {
+	//Size - file size in bytes
+	//CTime - change time (last file name or path change)
+	//MTime - modify time Max(last content change, CTime)
+	//ATime - access time Max(last opened, MTime)
+
+	start := utils.FileMetadata{ATime: time.Date(2019, 1, 1, 20, 34, 58, 651387237, time.UTC)}
+	end := utils.FileMetadata{}
+
+	//get parition index:
+	paritionIndex := 0
+	tree := readPartitionMetaGob(paritionIndex)
+	filesInfo := tree.SearchPartial(&start, &end)
+
+	var files []string
+
+	for _, file := range filesInfo {
+		files = append(files, file.Path)
+	}
+
+	return files
 }
