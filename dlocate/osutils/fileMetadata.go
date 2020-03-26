@@ -25,6 +25,10 @@ func NewFileMetadata(fileinfo os.FileInfo) FileMetadata {
 
 func getFileExtension(name string) string {
 	dot := strings.LastIndex(name, ".")
+	// hadles files without extention or hidden files
+	if dot == -1 || dot == 0 {
+		return ""
+	}
 	extention := name[dot+1:]
 	return extention
 }
