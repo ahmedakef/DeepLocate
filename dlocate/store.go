@@ -82,7 +82,7 @@ func readPartitionFilesGob(partitionIndex int) []string {
 }
 
 func savePartitionMetaGob(partitionIndex int, tree structure.KDTree) {
-	
+
 	metadataPath := filepath.FromSlash("indexFiles/metadata/")
 	if _, err := os.Stat(metadataPath); os.IsNotExist(err) {
 		os.MkdirAll(metadataPath, os.ModePerm)

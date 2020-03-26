@@ -7,7 +7,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-var operation = flag.String("o", "index", "the operation to do (index or search")
+var operation = flag.String("o", "index", "the operation to do (index or search or clear")
 var destination = flag.String("d", "./", "the search directory")
 var searchWord = flag.String("s", "", "the search word")
 
@@ -19,7 +19,7 @@ func main() {
 	root := *destination
 	op := *operation
 
-	// root = "/home/ahmed/Downloads/cloud computing/mp1/"
+	// root = "/home/ahmed/Downloads/cloud computing/"
 	// op = "search"
 	// remove trailling backslash
 	if filepath.ToSlash(root)[len(root)-1] == '/' {
@@ -28,9 +28,11 @@ func main() {
 
 	if op == "index" {
 		startIndexing(root)
+	} else if op == "clear" {
+		clearIndex()
 	} else if op == "search" {
 		word := *searchWord
-		// word = "run"
+		word = "run"
 		find(word, root)
 
 	}
