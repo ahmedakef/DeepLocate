@@ -33,7 +33,7 @@ func main() {
 	} else if op == "search" {
 		word := *searchWord
 		word = "run"
-		find(word, root)
+		findByFileName(word, root)
 
 	}
 

@@ -33,7 +33,7 @@ func getPartitionFiles(partitionIndex int, root string) []string {
 
 // word: word to search
 // root: directoy to search in
-func find(word, root string) []string {
+func findByFileName(word, root string) []string {
 	var directoryPartition DirectoryPartition
 
 	directoryPartition = getDirectoryPartition()

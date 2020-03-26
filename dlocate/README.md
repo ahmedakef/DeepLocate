@@ -8,6 +8,5 @@ go build
 # to search
 ./dlocate -o search -d /home/ahmed/Downloads/csed/networks -s midterm
 # to clear
-./dlocate -o clear -d /home/ahmed/Downloads/csed/networks
-
+./dlocate -o clear
 ```

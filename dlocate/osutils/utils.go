@@ -1,10 +1,32 @@
 package osutils
 
 import (
-	"log"
 	"os"
 	"path/filepath"
+	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
+
+// GetFileMetadata recieves file path and returns FileMetadata
+func GetFileMetadata(filePath string) FileMetadata {
+	// convert to slash to be sure of how it lookslike
+	filePath = filepath.ToSlash(filePath)
+
+	fileInfo, err := os.Stat(filepath.FromSlash(filePath))
+	if err != nil {
+		log.Fatalf("Error while getting fileInfo : %v", err)
+	}
+
+	lastSlash := strings.LastIndex(filePath, "/")
+	if lastSlash == -1 {
+		log.Fatalf("Error while getting filename : %v", err)
+	}
+	path := filePath[:lastSlash]
+
+	return GetFileInfo(fileInfo, path)
+
+}
 
 // ListFiles return a list of files and folders directly under the given dir
 func ListFiles(path string) []FileMetadata {
