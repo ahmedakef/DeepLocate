@@ -89,7 +89,7 @@ func (x *IndexInfo) savePartitions() {
 
 		// save metadata tree inside the partition
 		savePartitionMetaGob(partition.Index, partition.metadataTree)
-		SaveAsJSON(partition.filePaths, "indexFiles/metadata/m"+strconv.Itoa(partition.Index)+".json")
+		SaveAsJSON(partition.metadataTree, "indexFiles/metadata/m"+strconv.Itoa(partition.Index)+".json")
 	}
 }
 

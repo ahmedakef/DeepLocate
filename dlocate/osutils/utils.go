@@ -15,12 +15,12 @@ func GetFileMetadata(filePath string) FileMetadata {
 
 	fileInfo, err := os.Stat(filepath.FromSlash(filePath))
 	if err != nil {
-		log.Fatalf("Error while getting fileInfo : %v", err)
+		log.Errorf("Error while getting fileInfo : %v", err)
 	}
 
 	lastSlash := strings.LastIndex(filePath, "/")
 	if lastSlash == -1 {
-		log.Fatalf("Error while getting filename : %v", err)
+		log.Errorf("Error while getting filename : %v", err)
 	}
 	path := filePath[:lastSlash]
 
@@ -33,12 +33,12 @@ func ListFiles(path string) []FileMetadata {
 
 	f, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	files, err := f.Readdir(-1)
 	f.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	var filesData []FileMetadata
