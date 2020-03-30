@@ -45,6 +45,7 @@ func getDirectoryPartition() DirectoryPartition {
 func (d *DirectoryPartition) saveAsGob() {
 
 	path := "indexFiles/directoryPartition.gob"
+	SaveAsJSON(d, "indexFiles/directoryPartition.json")
 	err := saveGob(path, d)
 
 	if err != nil {

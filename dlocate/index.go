@@ -76,10 +76,12 @@ func isRoot(path string) int {
 }
 
 func clearIndex() {
+	os.Remove("indexFiles/directoryPartition.json")
 	err := os.Remove("indexFiles/directoryPartition.gob")
 	if err != nil {
 		log.Error(err)
 	}
+	os.Remove("indexFiles/indexInfo.json")
 	err = os.Remove("indexFiles/indexInfo.gob")
 	if err != nil {
 		log.Error(err)

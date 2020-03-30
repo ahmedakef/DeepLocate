@@ -82,11 +82,17 @@ func readPartitionFilesGob(partitionIndex int) []string {
 }
 
 func savePartitionMetaGob(partitionIndex int, tree structure.KDTree) {
+
+	metadataPath := filepath.FromSlash("indexFiles/metadata/")
+	if _, err := os.Stat(metadataPath); os.IsNotExist(err) {
+		os.MkdirAll(metadataPath, os.ModePerm)
+	}
+
 	path := "indexFiles/metadata/m" + strconv.Itoa(partitionIndex) + ".gob"
 	err := saveGob(path, tree)
 
 	if err != nil {
-		log.Errorf("Error while creating files metadata tree")
+		log.Error("Error while creating files metadata tree")
 		os.Exit(1)
 	}
 }
@@ -107,8 +113,8 @@ func readPartitionMetaGob(partitionIndex int) structure.KDTree {
 // SaveAsJSON save aby datatype as json for better reading while debugging
 func SaveAsJSON(data interface{}, filePath string) {
 	// create folder if not exits
-	lastslash := strings.LastIndex(filePath, "/")
-	directoryPath := filePath[:lastslash]
+	lastSlash := strings.LastIndex(filePath, "/")
+	directoryPath := filePath[:lastSlash]
 	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
 		os.MkdirAll(directoryPath, os.ModePerm)
 	}
