@@ -10,7 +10,7 @@ import (
 // DirectoryPartition saves index of partitions
 type DirectoryPartition map[string]int
 
-func (d DirectoryPartition) getDirectoryPartition(path string) int {
+func (d DirectoryPartition) getPathPartition(path string) int {
 	var index = -1
 	var ok = false
 	for {
@@ -46,7 +46,7 @@ func (d *DirectoryPartition) saveAsGob() {
 
 	path := "indexFiles/directoryPartition.gob"
 	SaveAsJSON(d, "indexFiles/directoryPartition.json")
-	err := saveGob(path, d)
+	err := saveGob(d, path)
 
 	if err != nil {
 		log.Errorf("Error while creating directoryPartitio file")

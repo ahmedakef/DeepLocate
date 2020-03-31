@@ -27,11 +27,6 @@ func startIndexing(path string) {
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
 
-	for _, partition := range indexInfo.partitions {
-		log.Debugf("start reading Partition %v\n", partition.Index)
-		p := readPartitionGob(partition.Index)
-		p.printPartition()
-	}
 }
 
 func indexPath(path string) {
@@ -98,4 +93,6 @@ func clearIndex() {
 	if err != nil {
 		log.Error(err)
 	}
+
+	log.Info("Index cleared successfully")
 }
