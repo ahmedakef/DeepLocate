@@ -17,12 +17,18 @@ func getPartitionFiles(partitionIndex int, root string) []string {
 		return []string{}
 	}
 	// check that partition have the root or its children
+	// TODO : I think we don't need this check now as inSameDirection is enugh
 	if !partition.containsDir(partition.getRelativePath(root)) {
 		return []string{}
 	}
-	fileNames := readPartitionFilesGob(partitionIndex)
-	for i, fileName := range fileNames {
-		fileNames[i] = partition.Root + fileName
+	partitionFiles := readPartitionFilesGob(partitionIndex)
+	fileNames := make([]string, partition.FilesNumber)
+	i := 0
+	for path, files := range partitionFiles {
+		for _, fileName := range files {
+			fileNames[i] = partition.Root + path + fileName
+			i++
+		}
 	}
 	for _, child := range partition.Children {
 		fileNames = append(fileNames, getPartitionFiles(child, root)...)
@@ -37,7 +43,7 @@ func findByFileName(word, root string) []string {
 	var directoryPartition DirectoryPartition
 
 	directoryPartition = getDirectoryPartition()
-	partitionIndex := directoryPartition.getDirectoryPartition(root)
+	partitionIndex := directoryPartition.getPathPartition(root)
 
 	// get all files names in the partition and its children
 	fileNames := getPartitionFiles(partitionIndex, root)

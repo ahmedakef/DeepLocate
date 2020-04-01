@@ -34,7 +34,7 @@ func readGob(path string, object interface{}) error {
 	return nil
 }
 
-func saveGob(path string, object interface{}) error {
+func saveGob(object interface{}, path string) error {
 
 	// FromSlash converts / to the specific file system separator
 	dataFile, err := os.Create(filepath.FromSlash(path))
@@ -51,15 +51,18 @@ func saveGob(path string, object interface{}) error {
 	return nil
 }
 
-func savePartitionFilesGob(partitionIndex int, partitionFiles []string) {
+func savePartitionFilesGob(partitionIndex int, partitionFiles map[string][]string) {
 
 	filePathsPath := filepath.FromSlash("indexFiles/filepaths/")
 	if _, err := os.Stat(filePathsPath); os.IsNotExist(err) {
 		os.MkdirAll(filePathsPath, os.ModePerm)
 	}
 
-	path := "indexFiles/filepaths/f" + strconv.Itoa(partitionIndex) + ".gob"
-	err := saveGob(path, partitionFiles)
+	path := "indexFiles/filepaths/f" + strconv.Itoa(partitionIndex)
+
+	SaveAsJSON(partitionFiles, path+".json")
+
+	err := saveGob(partitionFiles, path+".gob")
 
 	if err != nil {
 		log.Errorf("Error while creating partitionfiles file")
@@ -67,11 +70,11 @@ func savePartitionFilesGob(partitionIndex int, partitionFiles []string) {
 	}
 }
 
-func readPartitionFilesGob(partitionIndex int) []string {
+func readPartitionFilesGob(partitionIndex int) map[string][]string {
 	// TODO return error and results and check the error outside
 	path := "indexFiles/filepaths/f" + strconv.Itoa(partitionIndex) + ".gob"
 
-	var partitionFiles []string
+	var partitionFiles map[string][]string
 	err := readGob(path, &partitionFiles)
 	if err != nil {
 		log.Error("Error while reading partitionfiles")
@@ -88,8 +91,11 @@ func savePartitionMetaGob(partitionIndex int, tree structure.KDTree) {
 		os.MkdirAll(metadataPath, os.ModePerm)
 	}
 
-	path := "indexFiles/metadata/m" + strconv.Itoa(partitionIndex) + ".gob"
-	err := saveGob(path, tree)
+	path := "indexFiles/metadata/m" + strconv.Itoa(partitionIndex)
+
+	SaveAsJSON(tree, path+".json")
+
+	err := saveGob(tree, path+".gob")
 
 	if err != nil {
 		log.Error("Error while creating files metadata tree")

@@ -5,22 +5,26 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	structure "./dataStructures"
 	utils "./osutils"
 	log "github.com/Sirupsen/logrus"
 )
 
+// map from directory path to its lastChanged Date
+type directories map[string]time.Time
+
 // Partition conatins basic info about partitions
 type Partition struct {
 	Index        int
 	Root         string
-	Directories  []string
+	Directories  directories
 	FilesNumber  int
 	Children     []int // index for children partitions
 	Extenstion   SignatureFile
 	ExtenstionH  SignatureFile
-	filePaths    []string
+	filePaths    map[string][]string
 	metadataTree structure.KDTree
 	//TODO implement versioning
 	//TODO add metadata partition pointer
@@ -29,16 +33,24 @@ type Partition struct {
 
 // NewPartition creates new partition with 0 files and 0 children
 func NewPartition(index int, root string) Partition {
-	return Partition{Index: index, Root: root, FilesNumber: 0, Extenstion: newSignatureFile(), ExtenstionH: newSignatureFileH()}
+	return Partition{
+		Index: index, Root: root, Directories: make(map[string]time.Time),
+		filePaths: make(map[string][]string), FilesNumber: 0,
+		Extenstion: newSignatureFile(), ExtenstionH: newSignatureFileH(),
+	}
 }
 
 func (p *Partition) addDir(path string) {
+
+	lastChanged := utils.GetFileMetadata(path).CTime
+	relativePath := p.getRelativePath(path)
+
 	files := utils.ListFiles(path)
 	cnt := 0
-	p.Directories = append(p.Directories, p.getRelativePath(path))
 	for _, file := range files {
 		if !file.IsDir {
-			p.filePaths = append(p.filePaths, p.getRelativePath(file.Path))
+
+			p.filePaths[relativePath] = append(p.filePaths[relativePath], file.Name)
 			p.metadataTree.Insert(&file)
 			cnt++
 			p.addExtension(file.Extension)
@@ -47,6 +59,18 @@ func (p *Partition) addDir(path string) {
 	}
 	p.FilesNumber += cnt
 	p.ExtenstionH.or(p.Extenstion)
+
+	p.Directories[relativePath] = lastChanged
+}
+
+func (p *Partition) clearDir(path string) {
+
+	relativePath := p.getRelativePath(path)
+	delete(p.Directories, relativePath)
+	p.FilesNumber -= len(p.filePaths[relativePath])
+	p.filePaths[relativePath] = nil
+
+	// TODO : remove extensions from p.Extenstion
 }
 
 func (p *Partition) addExtension(extension string) {
@@ -56,8 +80,8 @@ func (p *Partition) addExtension(extension string) {
 
 // dirInDirs ensures that root exits inside any of directories
 func (p *Partition) containsDir(root string) bool {
-	for _, dir := range p.Directories {
-		if strings.HasPrefix(dir+"/", root+"/") {
+	for dir := range p.Directories {
+		if strings.HasPrefix(dir, root) {
 			return true
 		}
 	}
@@ -77,7 +101,7 @@ func (p *Partition) getRelativePath(path string) string {
 	if len(p.Root) > len(path) {
 		return ""
 	}
-	return path[len(p.Root):]
+	return path[len(p.Root):] + "/"
 }
 
 func (p *Partition) addChild(c *Partition) {
@@ -113,8 +137,14 @@ func (p *Partition) saveAsGob() {
 		os.MkdirAll(partitionsPath, os.ModePerm)
 	}
 
-	path := "indexFiles/partitions/p" + strconv.Itoa(p.Index) + ".gob"
-	err := saveGob(path, p)
+	path := "indexFiles/partitions/p" + strconv.Itoa(p.Index)
+
+	SaveAsJSON(p, path+".json")
+
+	err := saveGob(p, path+".gob")
+
+	// save files inside the partition
+	savePartitionFilesGob(p.Index, p.filePaths)
 
 	if err != nil {
 		log.Errorf("Error while storing index for partition %v: %v\n", p.Index, err)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"strconv"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -22,7 +21,9 @@ func getIndexInfo() IndexInfo {
 	var indexInfo IndexInfo
 	err := readGob(path, &indexInfo)
 	if err != nil {
-		return IndexInfo{CurIndex: 0, CurExtensionIndex: -1, Extensions: make(map[string]int), partitions: make(map[int]*Partition), Roots: make([]int, 0)}
+		return IndexInfo{CurIndex: 0, CurExtensionIndex: -1,
+			Extensions: make(map[string]int), partitions: make(map[int]*Partition),
+			Roots: make([]int, 0)}
 	}
 	indexInfo.partitions = make(map[int]*Partition)
 	return indexInfo
@@ -65,10 +66,20 @@ func (x *IndexInfo) addPartition(p *Partition) {
 	x.partitions[p.Index] = p
 }
 
+func (x *IndexInfo) getPartition(index int) *Partition {
+	partition, ok := x.partitions[index]
+	if !ok {
+		p := readPartitionGob(index)
+		x.addPartition(&p)
+		return &p
+	}
+	return partition
+}
+
 func (x *IndexInfo) saveAsGob() {
 	SaveAsJSON(x, "indexFiles/indexInfo.json")
 	path := "indexFiles/indexInfo.gob"
-	err := saveGob(path, x)
+	err := saveGob(x, path)
 
 	if err != nil {
 		log.Errorf("Error while creating indexInfo file")
@@ -80,16 +91,11 @@ func (x *IndexInfo) savePartitions() {
 	for _, partition := range x.partitions {
 		log.Debugf("start saving Partition %v\n", partition.Index)
 		partition.printPartition()
-		partition.saveAsGob()
-		SaveAsJSON(partition, "indexFiles/partitions/p"+strconv.Itoa(partition.Index)+".json")
 
-		// save files inside the partition
-		savePartitionFilesGob(partition.Index, partition.filePaths)
-		SaveAsJSON(partition.filePaths, "indexFiles/filepaths/f"+strconv.Itoa(partition.Index)+".json")
+		partition.saveAsGob()
 
 		// save metadata tree inside the partition
 		savePartitionMetaGob(partition.Index, partition.metadataTree)
-		SaveAsJSON(partition.metadataTree, "indexFiles/metadata/m"+strconv.Itoa(partition.Index)+".json")
 	}
 }
 

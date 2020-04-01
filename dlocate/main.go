@@ -20,7 +20,7 @@ func main() {
 	op := *operation
 
 	// root = "/home/ahmed/Downloads/cloud computing/"
-	// op = "search"
+	// op = "update"
 	// remove trailling backslash
 	if filepath.ToSlash(root)[len(root)-1] == '/' {
 		root = root[:len(root)-1]
@@ -30,11 +30,14 @@ func main() {
 		startIndexing(root)
 	} else if op == "clear" {
 		clearIndex()
+	} else if op == "update" {
+		update(root)
 	} else if op == "search" {
 		word := *searchWord
 		word = "run"
 		findByFileName(word, root)
-
+	} else {
+		log.Info("Please select correct operation")
 	}
 
 }
