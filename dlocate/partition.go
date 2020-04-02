@@ -27,8 +27,6 @@ type Partition struct {
 	filePaths    map[string][]string
 	metadataTree structure.KDTree
 	//TODO implement versioning
-	//TODO add metadata partition pointer
-	//TODO add content partition pointer
 }
 
 // NewPartition creates new partition with 0 files and 0 children
@@ -54,8 +52,11 @@ func (p *Partition) addDir(path string) {
 			p.metadataTree.Insert(&file)
 			cnt++
 			p.addExtension(file.Extension)
+
+			fileContent := map[string]float32{}
+			//TODO fill content map
+			invertedIndex.Insert(p.Index, file.Path, fileContent)
 		}
-		//TODO content partitions
 	}
 	p.FilesNumber += cnt
 	p.ExtenstionH.or(p.Extenstion)
@@ -121,7 +122,7 @@ func readPartitionGob(index int) Partition {
 	path := "indexFiles/partitions/p" + strconv.Itoa(index) + ".gob"
 
 	var partition Partition
-	err := readGob(path, &partition)
+	err := utils.ReadGob(path, &partition)
 	if err != nil {
 		log.Errorf("Error while reading index for partition %q: %v\n", index, err)
 		os.Exit(1)
@@ -139,9 +140,7 @@ func (p *Partition) saveAsGob() {
 
 	path := "indexFiles/partitions/p" + strconv.Itoa(p.Index)
 
-	SaveAsJSON(p, path+".json")
-
-	err := saveGob(p, path+".gob")
+	err := utils.SaveGob(p, path+".gob")
 
 	// save files inside the partition
 	savePartitionFilesGob(p.Index, p.filePaths)

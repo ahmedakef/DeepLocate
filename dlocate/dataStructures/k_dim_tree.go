@@ -29,23 +29,23 @@ func (tree *KDTree) SearchPartial(start *utils.FileMetadata, end *utils.FileMeta
 	if end.Size == 0 {
 		end.Size = math.MaxInt64
 	}
-	if start.MTime.IsZero() {
-		start.MTime = start.CTime
+	if start.CTime.IsZero() {
+		start.CTime = start.MTime
 	}
 	if start.ATime.IsZero() {
-		start.ATime = start.MTime
+		start.ATime = start.CTime
 	}
 	if end.ATime.IsZero() {
 		//add time to handle search process time
 		end.ATime = time.Now().Add(time.Hour * 1)
 	}
-	if end.MTime.IsZero() {
-		//add time to handle search process time
-		end.MTime = end.ATime
-	}
 	if end.CTime.IsZero() {
 		//add time to handle search process time
-		end.CTime = end.MTime
+		end.CTime = end.ATime
+	}
+	if end.MTime.IsZero() {
+		//add time to handle search process time
+		end.MTime = end.CTime
 	}
 	return tree.Search(start, end)
 }

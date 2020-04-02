@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	utils "./osutils"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -19,7 +20,7 @@ func getIndexInfo() IndexInfo {
 	path := "indexFiles/indexInfo.gob"
 
 	var indexInfo IndexInfo
-	err := readGob(path, &indexInfo)
+	err := utils.ReadGob(path, &indexInfo)
 	if err != nil {
 		return IndexInfo{CurIndex: 0, CurExtensionIndex: -1,
 			Extensions: make(map[string]int), partitions: make(map[int]*Partition),
@@ -77,9 +78,8 @@ func (x *IndexInfo) getPartition(index int) *Partition {
 }
 
 func (x *IndexInfo) saveAsGob() {
-	SaveAsJSON(x, "indexFiles/indexInfo.json")
 	path := "indexFiles/indexInfo.gob"
-	err := saveGob(x, path)
+	err := utils.SaveGob(x, path)
 
 	if err != nil {
 		log.Errorf("Error while creating indexInfo file")

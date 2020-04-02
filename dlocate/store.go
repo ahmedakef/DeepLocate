@@ -1,55 +1,14 @@
 package main
 
 import (
-	"encoding/gob"
-	"encoding/json"
-	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	structure "./dataStructures"
+	utils "./osutils"
 	log "github.com/Sirupsen/logrus"
 )
-
-func readGob(path string, object interface{}) error {
-	dataFile, err := os.Open(filepath.FromSlash(path))
-
-	if err != nil {
-		return err
-	}
-	// ensure to close the file after the fuction end
-	defer dataFile.Close()
-
-	var buf io.Reader = dataFile
-	//buf, _ = gzip.NewReader(dataFile)
-	dec := gob.NewDecoder(buf)
-	err = dec.Decode(object)
-
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func saveGob(object interface{}, path string) error {
-
-	// FromSlash converts / to the specific file system separator
-	dataFile, err := os.Create(filepath.FromSlash(path))
-	if err != nil {
-		return err
-	}
-	defer dataFile.Close()
-
-	var buf io.Writer = dataFile
-	//buf = gzip.NewWriter(dataFile)
-	enc := gob.NewEncoder(buf)
-	enc.Encode(object)
-
-	return nil
-}
 
 func savePartitionFilesGob(partitionIndex int, partitionFiles map[string][]string) {
 
@@ -60,9 +19,7 @@ func savePartitionFilesGob(partitionIndex int, partitionFiles map[string][]strin
 
 	path := "indexFiles/filepaths/f" + strconv.Itoa(partitionIndex)
 
-	SaveAsJSON(partitionFiles, path+".json")
-
-	err := saveGob(partitionFiles, path+".gob")
+	err := utils.SaveGob(partitionFiles, path+".gob")
 
 	if err != nil {
 		log.Errorf("Error while creating partitionfiles file")
@@ -75,7 +32,7 @@ func readPartitionFilesGob(partitionIndex int) map[string][]string {
 	path := "indexFiles/filepaths/f" + strconv.Itoa(partitionIndex) + ".gob"
 
 	var partitionFiles map[string][]string
-	err := readGob(path, &partitionFiles)
+	err := utils.ReadGob(path, &partitionFiles)
 	if err != nil {
 		log.Error("Error while reading partitionfiles")
 		os.Exit(1)
@@ -93,9 +50,7 @@ func savePartitionMetaGob(partitionIndex int, tree structure.KDTree) {
 
 	path := "indexFiles/metadata/m" + strconv.Itoa(partitionIndex)
 
-	SaveAsJSON(tree, path+".json")
-
-	err := saveGob(tree, path+".gob")
+	err := utils.SaveGob(tree, path+".gob")
 
 	if err != nil {
 		log.Error("Error while creating files metadata tree")
@@ -108,23 +63,10 @@ func readPartitionMetaGob(partitionIndex int) structure.KDTree {
 	path := "indexFiles/metadata/m" + strconv.Itoa(partitionIndex) + ".gob"
 
 	var tree structure.KDTree
-	err := readGob(path, &tree)
+	err := utils.ReadGob(path, &tree)
 	if err != nil {
 		log.Error("Error while reading files metadata tree")
 		os.Exit(1)
 	}
 	return tree
-}
-
-// SaveAsJSON save aby datatype as json for better reading while debugging
-func SaveAsJSON(data interface{}, filePath string) {
-	// create folder if not exits
-	lastSlash := strings.LastIndex(filePath, "/")
-	directoryPath := filePath[:lastSlash]
-	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
-		os.MkdirAll(directoryPath, os.ModePerm)
-	}
-
-	b, _ := json.MarshalIndent(data, "", "\t")
-	_ = ioutil.WriteFile(filepath.ToSlash(filePath), b, 0644)
 }
