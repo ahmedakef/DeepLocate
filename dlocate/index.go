@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	structure "./dataStructures"
 	utils "./osutils"
 	log "github.com/Sirupsen/logrus"
 )
@@ -12,6 +13,7 @@ const filesLimit = 100
 
 var directoryPartition DirectoryPartition
 var indexInfo IndexInfo
+var invertedIndex structure.InvertedIndex
 
 func startIndexing(path string) {
 	//load index and check for repeated indexing
@@ -26,13 +28,15 @@ func startIndexing(path string) {
 	indexInfo.savePartitions()
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
-
+	invertedIndex.Save()
 }
 
 func indexPath(path string) {
 	root := indexInfo.addRoot(path)
 	directoryPartition = getDirectoryPartition()
 	directoryPartition[filepath.ToSlash(path)] = root.Index
+
+	invertedIndex.Load()
 
 	indexDir(path, root)
 }
