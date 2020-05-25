@@ -20,6 +20,19 @@ func update(path string) bool {
 
 	filepath.Walk(path, updateIfChanged)
 
+	//delete directories info that was deleted
+	for _, partition := range indexInfo.partitions {
+		// partition = indexInfo.getPartition(partitionIndex)
+		for directory, toBeDeleted := range partition.toBeDeleted {
+			if toBeDeleted {
+				log.Warnf("Directory %v has been deleted "+
+					"and will be removed from index", directory)
+				partition.clearDir(partition.Root + directory[:len(directory)-1])
+			}
+		}
+
+	}
+
 	indexInfo.savePartitions()
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
@@ -39,9 +52,17 @@ func updateIfChanged(path string, info os.FileInfo, err error) error {
 		if partition.filePaths == nil {
 			partition.filePaths = readPartitionFilesGob(partitionIndex)
 		}
+		if partition.toBeDeleted == nil {
+			partition.toBeDeleted = make(map[string]bool)
+			// initialize all directories to be deleted
+			for directory := range partition.Directories {
+				partition.toBeDeleted[directory] = true
+			}
+		}
 
 		lastChanged := utils.GetFileMetadata(path).CTime // real one from OS
 		relativePath := partition.getRelativePath(path)
+		partition.toBeDeleted[relativePath] = false
 		savedLastChanged, ok := partition.Directories[relativePath]
 		// if new directory, index it and its subdirectories
 		if !ok {

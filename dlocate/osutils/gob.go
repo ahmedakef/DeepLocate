@@ -54,7 +54,7 @@ func SaveGob(object interface{}, path string) error {
 func saveAsJSON(data interface{}, path string) {
 	// create folder if not exits
 	lastdot := strings.LastIndex(path, ".")
-	filePath := path[:lastdot] + "json"
+	filePath := path[:lastdot+1] + "json"
 	lastSlash := strings.LastIndex(filePath, "/")
 	directoryPath := filePath[:lastSlash]
 	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {

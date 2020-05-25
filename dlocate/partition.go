@@ -25,6 +25,7 @@ type Partition struct {
 	Extenstion   SignatureFile
 	ExtenstionH  SignatureFile
 	filePaths    map[string][]string
+	toBeDeleted  map[string]bool
 	metadataTree structure.KDTree
 	//TODO implement versioning
 }
@@ -53,9 +54,9 @@ func (p *Partition) addDir(path string) {
 			cnt++
 			p.addExtension(file.Extension)
 
-			fileContent := map[string]float32{}
+			// fileContent := map[string]float32{}
 			//TODO fill content map
-			invertedIndex.Insert(p.Index, file.Path, fileContent)
+			// invertedIndex.Insert(p.Index, file.Path, fileContent)
 		}
 	}
 	p.FilesNumber += cnt
@@ -68,8 +69,8 @@ func (p *Partition) clearDir(path string) {
 
 	relativePath := p.getRelativePath(path)
 	delete(p.Directories, relativePath)
+	delete(p.filePaths, relativePath)
 	p.FilesNumber -= len(p.filePaths[relativePath])
-	p.filePaths[relativePath] = nil
 
 	// TODO : remove extensions from p.Extenstion
 }
