@@ -5,9 +5,10 @@ import (
 	"path/filepath"
 	"strconv"
 
-	structure "./dataStructures"
-	utils "./osutils"
-	log "github.com/Sirupsen/logrus"
+	structure "dlocate/dataStructures"
+	utils "dlocate/osutils"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func savePartitionFilesGob(partitionIndex int, partitionFiles map[string][]string) {

@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	utils "../osutils"
+	utils "dlocate/osutils"
 )
 
 const k uint = 4

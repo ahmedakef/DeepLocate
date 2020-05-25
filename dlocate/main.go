@@ -4,7 +4,7 @@ import (
 	"flag"
 	"path/filepath"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var operation = flag.String("o", "index", "the operation to do (index or search or clear")

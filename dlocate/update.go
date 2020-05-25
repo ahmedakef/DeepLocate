@@ -4,8 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	utils "./osutils"
-	log "github.com/Sirupsen/logrus"
+	utils "dlocate/osutils"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func update(path string) bool {

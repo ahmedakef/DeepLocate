@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	utils "./osutils"
-	log "github.com/Sirupsen/logrus"
+	utils "dlocate/osutils"
+	log "github.com/sirupsen/logrus"
 )
 
 // getPartitionFiles gets files of partition and its children

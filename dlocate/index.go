@@ -4,9 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
-	structure "./dataStructures"
-	utils "./osutils"
-	log "github.com/Sirupsen/logrus"
+	structure "dlocate/dataStructures"
+	utils "dlocate/osutils"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const filesLimit = 100

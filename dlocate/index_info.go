@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	utils "./osutils"
-	log "github.com/Sirupsen/logrus"
+	utils "dlocate/osutils"
+	log "github.com/sirupsen/logrus"
 )
 
 //IndexInfo stores general data about the whole index
