@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	utils "../osutils"
-	log "github.com/Sirupsen/logrus"
+	utils "dlocate/osutils"
+	log "github.com/sirupsen/logrus"
 )
 
 //InvertedIndex is a 2 level inverted index to search file contents

@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	utils "./osutils"
-	log "github.com/Sirupsen/logrus"
+	utils "dlocate/osutils"
+	log "github.com/sirupsen/logrus"
 )
 
 // DirectoryPartition saves index of partitions

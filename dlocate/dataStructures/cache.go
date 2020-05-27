@@ -4,8 +4,8 @@ import (
 	"container/list"
 	"strconv"
 
-	utils "../osutils"
-	log "github.com/Sirupsen/logrus"
+	utils "dlocate/osutils"
+	log "github.com/sirupsen/logrus"
 )
 
 //Cache is a generic struct to LRU cache different paritions data
