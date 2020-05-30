@@ -6,15 +6,16 @@ import (
 	"strings"
 
 	utils "dlocate/osutils"
+
 	log "github.com/sirupsen/logrus"
 )
 
 //InvertedIndex is a 2 level inverted index to search file contents
 type InvertedIndex struct {
-	content        map[string]map[int]map[int]float32
-	filesToIndices map[int]map[int]string
+	content        map[string]map[int]map[int]float32 //word, parition, file index, freq(score)
+	filesToIndices map[int]map[int]string             //parition, file index, filepath
+	NextFileID     map[int]int                        // partiion filepath
 	//TODO replace filepath with file relative path
-	NextFileID map[int]int
 }
 
 //Insert add[update] a file contents to[in] the content index
@@ -115,9 +116,9 @@ func (invertedIndex *InvertedIndex) loadPartitionDir(partitionID int) {
 	var partitionDir map[int]string
 	err := utils.ReadGob(path, &partitionDir)
 	if err != nil {
-		invertedIndex.filesToIndices[partitionID] = make(map[int]string)
+		invertedIndex.filesToIndices[partitionID] = partitionDir
 	}
-	invertedIndex.filesToIndices[partitionID] = partitionDir
+	invertedIndex.filesToIndices[partitionID] = make(map[int]string)
 }
 
 func (invertedIndex *InvertedIndex) savePartitionDir(partitionID int) {
@@ -132,20 +133,26 @@ func (invertedIndex *InvertedIndex) loadPartitionInvertedIndex(partition int, ke
 	if invertedIndex.content[keyword][partition] != nil {
 		return
 	}
-	path := "indexFiles/content/" + strconv.Itoa(partition) + ":" + keyword + ".gob"
+	path := "indexFiles/content/" + keyword + "-" + strconv.Itoa(partition) + ".gob"
 
 	var pInvertedIndex map[int]float32
 	err := utils.ReadGob(path, &pInvertedIndex)
 
-	if err != nil {
-		invertedIndex.content[keyword][partition] = make(map[int]float32)
+	if invertedIndex.content[keyword] == nil {
+		invertedIndex.content[keyword] = make(map[int]map[int]float32)
 	}
 
-	invertedIndex.content[keyword][partition] = pInvertedIndex
+	if err != nil {
+		invertedIndex.content[keyword][partition] = pInvertedIndex
+	}
+
+	invertedIndex.content[keyword][partition] = make(map[int]float32)
 }
 
 func (invertedIndex *InvertedIndex) savePartitionInvertedIndex(partition int, keyword string) {
-	path := "indexFiles/content/" + strconv.Itoa(partition) + ":" + keyword + ".gob"
+	path := "indexFiles/content/" + keyword + "-" + strconv.Itoa(partition) + ".gob"
+
+	log.Debug(path)
 
 	err := utils.SaveGob(invertedIndex.content[keyword][partition], path)
 	if err != nil {

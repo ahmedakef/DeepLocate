@@ -69,13 +69,13 @@ func (p *Partition) addDir(path string) {
 }
 
 func readTxt(path string) map[string]float32 {
-	content, err := ioutil.ReadFile("golangcode.txt")
+	content, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	text := string(content)
-	var words = strings.Split(text, " ")
+	var words = strings.Fields(text)
 	fileContent := map[string]float32{}
 	for _, word := range words {
 		fileContent[word]++
