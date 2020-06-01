@@ -86,6 +86,11 @@ func clearIndex() {
 	if err != nil {
 		log.Error(err)
 	}
+	os.Remove("indexFiles/invertedIndex.json")
+	err = os.Remove("indexFiles/invertedIndex.gob")
+	if err != nil {
+		log.Error(err)
+	}
 	err = utils.RemoveContents("indexFiles/filepaths")
 	if err != nil {
 		log.Error(err)
@@ -95,6 +100,10 @@ func clearIndex() {
 		log.Error(err)
 	}
 	err = utils.RemoveContents("indexFiles/partitions")
+	if err != nil {
+		log.Error(err)
+	}
+	err = utils.RemoveContents("indexFiles/content")
 	if err != nil {
 		log.Error(err)
 	}

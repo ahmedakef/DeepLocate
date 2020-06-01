@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -55,15 +56,32 @@ func (p *Partition) addDir(path string) {
 			cnt++
 			p.addExtension(file.Extension)
 
-			// fileContent := map[string]float32{}
-			//TODO fill content map
-			// invertedIndex.Insert(p.Index, file.Path, fileContent)
+			//TODO fill content map for other formats
+			if file.Extension == "txt" {
+				invertedIndex.Insert(p.Index, file.Path, readTxt(file.Path))
+			}
 		}
 	}
 	p.FilesNumber += cnt
 	p.ExtenstionH.or(p.Extenstion)
 
 	p.Directories[relativePath] = lastChanged
+}
+
+func readTxt(path string) map[string]float32 {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	text := string(content)
+	var words = strings.Fields(text)
+	fileContent := map[string]float32{}
+	for _, word := range words {
+		fileContent[word]++
+	}
+
+	return fileContent
 }
 
 func (p *Partition) clearDir(path string) {

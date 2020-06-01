@@ -1,32 +1,34 @@
 package structures
 
 import (
-	"container/list"
 	"strconv"
 
 	utils "dlocate/osutils"
+
 	log "github.com/sirupsen/logrus"
 )
 
 //Cache is a generic struct to LRU cache different paritions data
 type Cache struct {
-	capacity int
-	path     string
-	content  map[int]interface{}
-	cached   int
-	queue    list.List
-	freq     map[int]int
+	capacity      int
+	path          string
+	content       map[int]interface{}
+	cached        int
+	requestIndex  int
+	lastRequested map[int]int
 }
 
 //GetCache create and return a new cache object using a path and a capacity limit
 func GetCache(capacity int, path string) Cache {
-	return Cache{capacity: capacity, path: path, content: make(map[int]interface{}), cached: 0, queue: *list.New(), freq: make(map[int]int)}
+	return Cache{capacity: capacity, path: path, content: make(map[int]interface{}), cached: 0, requestIndex: 1, lastRequested: make(map[int]int)}
 }
 
 //Get returns a pointer to a parition specific object with an index
 func (cache *Cache) Get(index int) *interface{} {
 	cache.addIndex(index)
-	cache.removeLeastUsed()
+	if cache.cached > cache.capacity {
+		cache.removeLeastUsed()
+	}
 
 	//cache hit
 	if val, ok := cache.content[index]; ok {
@@ -44,31 +46,29 @@ func (cache *Cache) Get(index int) *interface{} {
 	return &object
 }
 
+//Delete removes a cached object from the cache
+func (cache *Cache) Delete(index int) {
+	delete(cache.lastRequested, index)
+	delete(cache.content, index)
+	cache.cached = len(cache.lastRequested)
+}
+
 func (cache *Cache) addIndex(index int) {
-	cache.queue.PushBack(index)
-	cache.freq[index]++
-	if cache.freq[index] == 1 {
-		cache.cached++
-	}
+	cache.lastRequested[index] = cache.requestIndex
+	cache.requestIndex++
+	cache.cached = len(cache.lastRequested)
 }
 
 func (cache *Cache) removeLeastUsed() {
-	for cache.queue.Len() > 0 && cache.cached > cache.capacity {
-		cache.removeQueueFront()
+	var minValue = 0
+	var minIndex = -1
+
+	for k, v := range cache.lastRequested {
+		if v < minValue {
+			minValue = v
+			minIndex = k
+		}
 	}
-}
-
-func (cache *Cache) removeQueueFront() {
-	e := cache.queue.Front()
-	cache.queue.Remove(e)
-
-	val := e.Value.(int)
-
-	if cache.freq[val] == 1 {
-		delete(cache.freq, val)
-		delete(cache.content, val)
-		cache.cached--
-	} else {
-		cache.freq[val]--
-	}
+	delete(cache.lastRequested, minIndex)
+	delete(cache.content, minIndex)
 }
