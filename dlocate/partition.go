@@ -108,14 +108,17 @@ func (p *Partition) containsDir(root string) bool {
 
 // inSameDirection ensures that path is parent or child of the partition path
 func (p *Partition) inSameDirection(path string) bool {
+	// partition is the parent of the path
 	if len(path) > len(p.Root) {
 		return strings.HasPrefix(path, p.Root)
 	}
+
+	// partition is one of path's children
 	return strings.HasPrefix(p.Root, path)
 }
 
 func (p *Partition) getRelativePath(path string) string {
-	// if root is longer then it is one of path's children
+	// if p.Root is longer then it is one of path's children
 	if len(p.Root) > len(path) {
 		return ""
 	}

@@ -36,10 +36,14 @@ func main() {
 		clearIndex()
 	} else if op == "update" {
 		update(root)
-	} else if op == "search" {
+	} else if op == "searchNames" {
 		word := *searchWord
 		word = "run"
-		findByFileName(word, root)
+		find(word, root, false)
+	} else if op == "searchContent" {
+		word := *searchWord
+		word = "run"
+		find(word, root, true)
 	} else {
 		log.Info("Please select correct operation")
 	}
