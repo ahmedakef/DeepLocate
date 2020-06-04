@@ -11,6 +11,8 @@ var operation = flag.String("o", "index", "the operation to do (index or search 
 var destination = flag.String("d", "./", "the search directory")
 var searchWord = flag.String("s", "", "the search word")
 
+var indexInfo IndexInfo
+
 func main() {
 
 	log.SetLevel(log.DebugLevel)
@@ -25,6 +27,8 @@ func main() {
 	if filepath.ToSlash(root)[len(root)-1] == '/' {
 		root = root[:len(root)-1]
 	}
+
+	indexInfo = getIndexInfo()
 
 	if op == "index" {
 		startIndexing(root)

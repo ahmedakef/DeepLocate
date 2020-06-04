@@ -1,16 +1,19 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
+	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
+
 	log "github.com/sirupsen/logrus"
 )
 
 // getPartitionFiles gets files of partition and its children
 func getPartitionFiles(partitionIndex int, root string) []string {
-	partition := readPartitionGob(partitionIndex)
+	partition := indexInfo.getPartition(partitionIndex)
 
 	// check that partition is related to the root
 	if !partition.inSameDirection(root) {
@@ -21,10 +24,10 @@ func getPartitionFiles(partitionIndex int, root string) []string {
 	if !partition.containsDir(partition.getRelativePath(root)) {
 		return []string{}
 	}
-	partitionFiles := readPartitionFilesGob(partitionIndex)
+	partitionFiles, _ := indexInfo.filesCache.Get(strconv.Itoa(partitionIndex))
 	fileNames := make([]string, partition.FilesNumber)
 	i := 0
-	for path, files := range partitionFiles {
+	for path, files := range partitionFiles.(map[string][]string) {
 		for _, fileName := range files {
 			fileNames[i] = partition.Root + path + fileName
 			i++
@@ -71,8 +74,9 @@ func metaSearch() []string {
 	end := utils.FileMetadata{}
 
 	//get parition index:
-	paritionIndex := 0
-	tree := readPartitionMetaGob(paritionIndex)
+	partitionIndex := 0
+	val, _ := indexInfo.metaCache.Get(strconv.Itoa(partitionIndex))
+	tree := val.(structure.KDTree)
 	filesInfo := tree.SearchPartial(&start, &end)
 
 	var files []string

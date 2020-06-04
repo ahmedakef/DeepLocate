@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 
 	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
@@ -13,13 +14,10 @@ import (
 const filesLimit = 100
 
 var directoryPartition DirectoryPartition
-var indexInfo IndexInfo
 var invertedIndex structure.InvertedIndex
 
 func startIndexing(path string) {
 	//load index and check for repeated indexing
-	indexInfo = getIndexInfo()
-	indexInfo.loadRoots()
 	if isRoot(path) != -1 {
 		return
 	}
@@ -39,7 +37,7 @@ func indexPath(path string) {
 
 	invertedIndex.Load()
 
-	indexDir(path, root)
+	indexDir(path, &root)
 }
 
 func indexDir(path string, root *Partition) {
@@ -49,7 +47,8 @@ func indexDir(path string, root *Partition) {
 		if file.IsDir {
 			indexedUnder := isRoot(file.Path)
 			if indexedUnder != -1 {
-				root.addChild(indexInfo.partitions[indexedUnder])
+				parition, _ := indexInfo.partitionsCache.Get(strconv.Itoa(indexedUnder))
+				root.addChild(parition.(*Partition))
 				indexInfo.removeRoot(indexedUnder)
 				continue
 			}
@@ -64,15 +63,6 @@ func indexDir(path string, root *Partition) {
 			}
 		}
 	}
-}
-
-func isRoot(path string) int {
-	for _, root := range indexInfo.Roots {
-		if indexInfo.partitions[root].Root == path {
-			return root
-		}
-	}
-	return -1
 }
 
 func clearIndex() {

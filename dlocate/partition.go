@@ -2,9 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -138,6 +135,7 @@ func (p *Partition) hasExtenstionH(index int) bool {
 	return p.ExtenstionH.getBit(index)
 }
 
+/*
 func readPartitionGob(index int) Partition {
 	path := "indexFiles/partitions/p" + strconv.Itoa(index) + ".gob"
 
@@ -171,6 +169,7 @@ func (p *Partition) saveAsGob() {
 	}
 
 }
+*/
 
 func (p *Partition) printPartition() {
 	log.WithFields(log.Fields{
