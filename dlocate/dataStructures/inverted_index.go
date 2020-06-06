@@ -108,16 +108,16 @@ func (invertedIndex *InvertedIndex) Load() {
 	if err != nil {
 		invertedIndex.NextFileID = make(map[int]int)
 	}
-	invertedIndex.contentCache = GetCache(100, "indexFiles/content/")
-	invertedIndex.filesToIndicesCache = GetCache(10, "indexFiles/content/filesToIndices")
+	invertedIndex.contentCache = GetCache(100)
+	invertedIndex.filesToIndicesCache = GetCache(10)
 }
 
 func (invertedIndex *InvertedIndex) loadPartitionDir(partitionID int) {
 	if invertedIndex.filesToIndices[partitionID] != nil {
 		return
 	}
-	partitionDir, err := invertedIndex.filesToIndicesCache.Get(strconv.Itoa(partitionID))
-	if err != nil {
+	partitionDir, ok := invertedIndex.filesToIndicesCache.Get(strconv.Itoa(partitionID))
+	if ok {
 		invertedIndex.filesToIndices[partitionID] = partitionDir.(map[int]string)
 		return
 	}
@@ -130,7 +130,7 @@ func (invertedIndex *InvertedIndex) savePartitionDir(partitionID int) {
 	if err != nil {
 		log.Error(err)
 	}
-	invertedIndex.filesToIndicesCache.Delete(strconv.Itoa(partitionID))
+	invertedIndex.filesToIndicesCache.Set(strconv.Itoa(partitionID), invertedIndex.filesToIndices[partitionID])
 }
 
 func (invertedIndex *InvertedIndex) loadPartitionInvertedIndex(partition int, keyword string) {
@@ -143,9 +143,9 @@ func (invertedIndex *InvertedIndex) loadPartitionInvertedIndex(partition int, ke
 		invertedIndex.content[keyword] = make(map[int]map[int]float32)
 	}
 
-	pInvertedIndex, err := invertedIndex.contentCache.Get(key)
+	pInvertedIndex, ok := invertedIndex.contentCache.Get(key)
 
-	if err != nil {
+	if ok {
 		invertedIndex.content[keyword][partition] = pInvertedIndex.(map[int]float32)
 		return
 	}

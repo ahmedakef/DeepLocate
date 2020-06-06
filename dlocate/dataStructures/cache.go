@@ -1,15 +1,8 @@
 package structures
 
-import (
-	utils "dlocate/osutils"
-
-	log "github.com/sirupsen/logrus"
-)
-
 //Cache is a generic struct to LRU cache different paritions data
 type Cache struct {
 	capacity      int
-	path          string
 	content       map[string]interface{}
 	cached        int
 	requestIndex  int
@@ -17,41 +10,28 @@ type Cache struct {
 }
 
 //GetCache create and return a new cache object using a path and a capacity limit
-func GetCache(capacity int, path string) Cache {
-	return Cache{capacity: capacity, path: path, content: make(map[string]interface{}), cached: 0, requestIndex: 1, lastRequested: make(map[string]int)}
+func GetCache(capacity int) Cache {
+	return Cache{capacity: capacity, content: make(map[string]interface{}), cached: 0, requestIndex: 1, lastRequested: make(map[string]int)}
 }
 
 //Get returns a pointer to a parition specific object with an index
-func (cache *Cache) Get(key string) (interface{}, error) {
+func (cache *Cache) Get(key string) (interface{}, bool) {
 	//cache hit
 	if val, ok := cache.content[key]; ok {
 		cache.addIndex(key)
-		return &val, nil
+		return val, true
 	}
 
 	//cache miss
-	path := cache.path + key + ".gob"
-
-	var object interface{}
-	err := utils.ReadGob(path, object)
-	if err != nil {
-		log.Errorf("Error while reading object for partition %q: %v\n", key, err)
-		return nil, err
-	}
-
-	cache.addIndex(key)
-	if cache.cached > cache.capacity {
-		cache.removeLeastUsed()
-	}
-
-	return &object, err
+	return nil, false
 }
 
-//Clear stores all changes to objects in files and remove them from cache
+//Clear remove all objects from cache
 func (cache *Cache) Clear() {
-	for cache.cached > 0 {
-		cache.removeLeastUsed()
-	}
+	cache.cached = 0
+	cache.content = make(map[string]interface{})
+	cache.requestIndex = 1
+	cache.lastRequested = make(map[string]int)
 }
 
 //Set save a specific value into an object
@@ -87,7 +67,7 @@ func (cache *Cache) removeLeastUsed() {
 			minIndex = k
 		}
 	}
-	utils.SaveGob(cache.content[minIndex], cache.path+minIndex+".gob")
 	delete(cache.lastRequested, minIndex)
 	delete(cache.content, minIndex)
+	cache.cached = len(cache.lastRequested)
 }

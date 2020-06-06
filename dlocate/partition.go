@@ -138,42 +138,6 @@ func (p *Partition) hasExtenstionH(index int) bool {
 	return p.ExtenstionH.getBit(index)
 }
 
-/*
-func readPartitionGob(index int) Partition {
-	path := "indexFiles/partitions/p" + strconv.Itoa(index) + ".gob"
-
-	var partition Partition
-	err := utils.ReadGob(path, &partition)
-	if err != nil {
-		log.Errorf("Error while reading index for partition %q: %v\n", index, err)
-		os.Exit(1)
-	}
-	partition.Root = filepath.FromSlash(partition.Root)
-	return partition
-}
-
-func (p *Partition) saveAsGob() {
-	p.Root = filepath.ToSlash(p.Root)
-	partitionsPath := filepath.FromSlash("indexFiles/partitions/")
-	if _, err := os.Stat(partitionsPath); os.IsNotExist(err) {
-		os.MkdirAll(partitionsPath, os.ModePerm)
-	}
-
-	path := "indexFiles/partitions/p" + strconv.Itoa(p.Index)
-
-	err := utils.SaveGob(p, path+".gob")
-
-	// save files inside the partition
-	savePartitionFilesGob(p.Index, p.filePaths)
-
-	if err != nil {
-		log.Errorf("Error while storing index for partition %v: %v\n", p.Index, err)
-		os.Exit(1)
-	}
-
-}
-*/
-
 func (p *Partition) printPartition() {
 	log.WithFields(log.Fields{
 		"Index":       p.Index,

@@ -31,12 +31,15 @@ func getIndexInfo() IndexInfo {
 			CurIndex:          0,
 			CurExtensionIndex: -1,
 			Extensions:        make(map[string]int),
-			partitionsCache:   structure.GetCache(100, "indexFiles/partitions/p"),
-			metaCache:         structure.GetCache(100, "indexFiles/metadata/m"),
-			filesCache:        structure.GetCache(100, "indexFiles/filepaths/f"),
+			partitionsCache:   structure.GetCache(100),
+			metaCache:         structure.GetCache(100),
+			filesCache:        structure.GetCache(100),
 			Roots:             make([]int, 0),
 		}
 	}
+	indexInfo.partitionsCache = structure.GetCache(100)
+	indexInfo.metaCache = structure.GetCache(100)
+	indexInfo.filesCache = structure.GetCache(100)
 	return indexInfo
 }
 
@@ -71,7 +74,12 @@ func (indexInfo *IndexInfo) addPartition(p *Partition) {
 }
 
 func (indexInfo *IndexInfo) getPartition(index int) Partition {
-	partition, _ := indexInfo.partitionsCache.Get(strconv.Itoa(index))
+	partition, ok := indexInfo.partitionsCache.Get(strconv.Itoa(index))
+	if !ok {
+		p := readPartitionGob(index)
+		indexInfo.addPartition(&p)
+		return p
+	}
 	return partition.(Partition)
 }
 
@@ -93,8 +101,8 @@ func (indexInfo *IndexInfo) savePartitions() {
 
 func isRoot(path string) int {
 	for _, root := range indexInfo.Roots {
-		parition, err := indexInfo.partitionsCache.Get(strconv.Itoa(root))
-		if err == nil && parition.(Partition).Root == path {
+		parition, ok := indexInfo.partitionsCache.Get(strconv.Itoa(root))
+		if ok && parition.(Partition).Root == path {
 			return root
 		}
 	}

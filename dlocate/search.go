@@ -12,19 +12,19 @@ import (
 )
 
 // getPartitionFiles gets files of partition and its children
-func getPartitionFiles(partitionIndex int, root string) []string {
+func getPartitionFiles(partitionIndex int, path string) []string {
 	partition := indexInfo.getPartition(partitionIndex)
 
 	// check that partition is related to the path
 	if !partition.inSameDirection(path) {
 		return []string{}
 	}
-	// check that partition have the root or its children
-	// TODO : I think we don't need this check now as inSameDirection is enugh
-	if !partition.containsDir(partition.getRelativePath(root)) {
-		return []string{}
+
+	partitionFiles, ok := indexInfo.filesCache.Get(strconv.Itoa(partitionIndex))
+	if !ok {
+		partitionFiles = readPartitionFilesGob(partitionIndex)
+		indexInfo.filesCache.Set(strconv.Itoa(partitionIndex), partitionFiles)
 	}
-	partitionFiles, _ := indexInfo.filesCache.Get(strconv.Itoa(partitionIndex))
 	fileNames := make([]string, partition.FilesNumber)
 	i := 0
 	for path, files := range partitionFiles.(map[string][]string) {
@@ -44,7 +44,7 @@ func getPartitionFiles(partitionIndex int, root string) []string {
 // to the given path (either parent or child)
 // and excludes the non relevant partitions
 func getPartitionClildren(partitionIndex int, path string) []int {
-	partition := readPartitionGob(partitionIndex)
+	partition := indexInfo.getPartition(partitionIndex)
 
 	// check that partition is related to the path
 	if !partition.inSameDirection(path) {
@@ -111,8 +111,14 @@ func metaSearch() []string {
 
 	//get parition index:
 	partitionIndex := 0
-	val, _ := indexInfo.metaCache.Get(strconv.Itoa(partitionIndex))
-	tree := val.(structure.KDTree)
+	val, ok := indexInfo.metaCache.Get(strconv.Itoa(partitionIndex))
+	var tree structure.KDTree
+	if !ok {
+		tree = readPartitionMetaGob(partitionIndex)
+		indexInfo.metaCache.Set(strconv.Itoa(partitionIndex), tree)
+	} else {
+		tree = val.(structure.KDTree)
+	}
 	filesInfo := tree.SearchPartial(&start, &end)
 
 	var files []string
