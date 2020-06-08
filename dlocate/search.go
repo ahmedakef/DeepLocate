@@ -1,9 +1,11 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
+	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
 
 	log "github.com/sirupsen/logrus"
@@ -11,17 +13,21 @@ import (
 
 // getPartitionFiles gets files of partition and its children
 func getPartitionFiles(partitionIndex int, path string) []string {
-	partition := readPartitionGob(partitionIndex)
+	partition := indexInfo.getPartition(partitionIndex)
 
 	// check that partition is related to the path
 	if !partition.inSameDirection(path) {
 		return []string{}
 	}
 
-	partitionFiles := readPartitionFilesGob(partitionIndex)
+	partitionFiles, ok := indexInfo.filesCache.Get(strconv.Itoa(partitionIndex))
+	if !ok {
+		partitionFiles = readPartitionFilesGob(partitionIndex)
+		indexInfo.filesCache.Set(strconv.Itoa(partitionIndex), partitionFiles)
+	}
 	fileNames := make([]string, partition.FilesNumber)
 	i := 0
-	for path, files := range partitionFiles {
+	for path, files := range partitionFiles.(map[string][]string) {
 		for _, fileName := range files {
 			fileNames[i] = partition.Root + path + fileName
 			i++
@@ -38,7 +44,7 @@ func getPartitionFiles(partitionIndex int, path string) []string {
 // to the given path (either parent or child)
 // and excludes the non relevant partitions
 func getPartitionClildren(partitionIndex int, path string) []int {
-	partition := readPartitionGob(partitionIndex)
+	partition := indexInfo.getPartition(partitionIndex)
 
 	// check that partition is related to the path
 	if !partition.inSameDirection(path) {
@@ -104,8 +110,15 @@ func metaSearch() []string {
 	end := utils.FileMetadata{}
 
 	//get parition index:
-	paritionIndex := 0
-	tree := readPartitionMetaGob(paritionIndex)
+	partitionIndex := 0
+	val, ok := indexInfo.metaCache.Get(strconv.Itoa(partitionIndex))
+	var tree structure.KDTree
+	if !ok {
+		tree = readPartitionMetaGob(partitionIndex)
+		indexInfo.metaCache.Set(strconv.Itoa(partitionIndex), tree)
+	} else {
+		tree = val.(structure.KDTree)
+	}
 	filesInfo := tree.SearchPartial(&start, &end)
 
 	var files []string

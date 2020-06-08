@@ -11,6 +11,8 @@ var operation = flag.String("o", "index", "the operation to do (index or search 
 var destination = flag.String("d", "./", "the search directory")
 var searchWord = flag.String("s", "", "the search word")
 
+var indexInfo IndexInfo
+
 func main() {
 
 	log.SetLevel(log.DebugLevel)
@@ -26,6 +28,8 @@ func main() {
 		root = root[:len(root)-1]
 	}
 
+	indexInfo = getIndexInfo()
+
 	if op == "index" {
 		startIndexing(root)
 	} else if op == "clear" {
@@ -34,11 +38,11 @@ func main() {
 		update(root)
 	} else if op == "searchNames" {
 		word := *searchWord
-		word = "run"
+		//word = "run"
 		find(word, root, false)
 	} else if op == "searchContent" {
 		word := *searchWord
-		word = "run"
+		//word = "run"
 		find(word, root, true)
 	} else {
 		log.Info("Please select correct operation")

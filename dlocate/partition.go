@@ -2,9 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -36,13 +33,13 @@ type Partition struct {
 func NewPartition(index int, root string) Partition {
 	return Partition{
 		Index: index, Root: root, Directories: make(map[string]time.Time),
+		Children:  make([]int, 0),
 		filePaths: make(map[string][]string), FilesNumber: 0,
 		Extenstion: newSignatureFile(), ExtenstionH: newSignatureFileH(),
 	}
 }
 
 func (p *Partition) addDir(path string) {
-
 	lastChanged := utils.GetFileMetadata(path).CTime
 	relativePath := p.getRelativePath(path)
 
@@ -50,12 +47,10 @@ func (p *Partition) addDir(path string) {
 	cnt := 0
 	for _, file := range files {
 		if !file.IsDir {
-
 			p.filePaths[relativePath] = append(p.filePaths[relativePath], file.Name)
 			p.metadataTree.Insert(&file)
 			cnt++
 			p.addExtension(file.Extension)
-
 			//TODO fill content map for other formats
 			if file.Extension == "txt" {
 				invertedIndex.Insert(p.Index, file.Path, readTxt(file.Path))
@@ -139,40 +134,6 @@ func (p *Partition) hasExtenstion(index int) bool {
 
 func (p *Partition) hasExtenstionH(index int) bool {
 	return p.ExtenstionH.getBit(index)
-}
-
-func readPartitionGob(index int) Partition {
-	path := "indexFiles/partitions/p" + strconv.Itoa(index) + ".gob"
-
-	var partition Partition
-	err := utils.ReadGob(path, &partition)
-	if err != nil {
-		log.Errorf("Error while reading index for partition %q: %v\n", index, err)
-		os.Exit(1)
-	}
-	partition.Root = filepath.FromSlash(partition.Root)
-	return partition
-}
-
-func (p *Partition) saveAsGob() {
-	p.Root = filepath.ToSlash(p.Root)
-	partitionsPath := filepath.FromSlash("indexFiles/partitions/")
-	if _, err := os.Stat(partitionsPath); os.IsNotExist(err) {
-		os.MkdirAll(partitionsPath, os.ModePerm)
-	}
-
-	path := "indexFiles/partitions/p" + strconv.Itoa(p.Index)
-
-	err := utils.SaveGob(p, path+".gob")
-
-	// save files inside the partition
-	savePartitionFilesGob(p.Index, p.filePaths)
-
-	if err != nil {
-		log.Errorf("Error while storing index for partition %v: %v\n", p.Index, err)
-		os.Exit(1)
-	}
-
 }
 
 func (p *Partition) printPartition() {

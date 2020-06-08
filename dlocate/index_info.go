@@ -2,8 +2,11 @@ package main
 
 import (
 	"os"
+	"strconv"
 
+	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -13,7 +16,9 @@ type IndexInfo struct {
 	CurExtensionIndex int
 	Extensions        map[string]int
 	Roots             []int
-	partitions        map[int]*Partition
+	partitionsCache   structure.Cache
+	metaCache         structure.Cache
+	filesCache        structure.Cache
 }
 
 func getIndexInfo() IndexInfo {
@@ -22,64 +27,65 @@ func getIndexInfo() IndexInfo {
 	var indexInfo IndexInfo
 	err := utils.ReadGob(path, &indexInfo)
 	if err != nil {
-		return IndexInfo{CurIndex: 0, CurExtensionIndex: -1,
-			Extensions: make(map[string]int), partitions: make(map[int]*Partition),
-			Roots: make([]int, 0)}
+		return IndexInfo{
+			CurIndex:          0,
+			CurExtensionIndex: -1,
+			Extensions:        make(map[string]int),
+			partitionsCache:   structure.GetCache(100),
+			metaCache:         structure.GetCache(100),
+			filesCache:        structure.GetCache(100),
+			Roots:             make([]int, 0),
+		}
 	}
-	indexInfo.partitions = make(map[int]*Partition)
+	indexInfo.partitionsCache = structure.GetCache(100)
+	indexInfo.metaCache = structure.GetCache(100)
+	indexInfo.filesCache = structure.GetCache(100)
 	return indexInfo
 }
 
-func (x *IndexInfo) loadRoots() {
-	for _, root := range x.Roots {
-		partition := readPartitionGob(root)
-		x.partitions[root] = &partition
-	}
-}
-
-func (x *IndexInfo) getExtensionIndex(name string) int {
-	index, ok := x.Extensions[name]
+func (indexInfo *IndexInfo) getExtensionIndex(name string) int {
+	index, ok := indexInfo.Extensions[name]
 	if !ok {
-		index = x.getNextExtensionIndex()
-		x.Extensions[name] = index
+		index = indexInfo.getNextExtensionIndex()
+		indexInfo.Extensions[name] = index
 	}
 	return index
 }
 
-func (x *IndexInfo) getNextExtensionIndex() int {
-	x.CurExtensionIndex++
-	return x.CurExtensionIndex
+func (indexInfo *IndexInfo) getNextExtensionIndex() int {
+	indexInfo.CurExtensionIndex++
+	return indexInfo.CurExtensionIndex
 }
 
-func (x *IndexInfo) getNextPartitionIndex() int {
-	x.CurIndex++
-	return x.CurIndex
+func (indexInfo *IndexInfo) getNextPartitionIndex() int {
+	indexInfo.CurIndex++
+	return indexInfo.CurIndex
 }
 
-func (x *IndexInfo) addRoot(path string) *Partition {
-	root := NewPartition(x.getNextPartitionIndex(), path)
-	x.Roots = append(x.Roots, root.Index)
-	x.addPartition(&root)
-	return &root
+func (indexInfo *IndexInfo) addRoot(path string) Partition {
+	root := NewPartition(indexInfo.getNextPartitionIndex(), path)
+	indexInfo.Roots = append(indexInfo.Roots, root.Index)
+	indexInfo.addPartition(root)
+	return root
 }
 
-func (x *IndexInfo) addPartition(p *Partition) {
-	x.partitions[p.Index] = p
+func (indexInfo *IndexInfo) addPartition(p Partition) {
+	indexInfo.partitionsCache.Set(strconv.Itoa(p.Index), p)
 }
 
-func (x *IndexInfo) getPartition(index int) *Partition {
-	partition, ok := x.partitions[index]
+func (indexInfo *IndexInfo) getPartition(index int) Partition {
+	partition, ok := indexInfo.partitionsCache.Get(strconv.Itoa(index))
 	if !ok {
 		p := readPartitionGob(index)
-		x.addPartition(&p)
-		return &p
+		indexInfo.addPartition(p)
+		return p
 	}
-	return partition
+	return partition.(Partition)
 }
 
-func (x *IndexInfo) saveAsGob() {
+func (indexInfo *IndexInfo) saveAsGob() {
 	path := "indexFiles/indexInfo.gob"
-	err := utils.SaveGob(x, path)
+	err := utils.SaveGob(indexInfo, path)
 
 	if err != nil {
 		log.Errorf("Error while creating indexInfo file")
@@ -87,23 +93,27 @@ func (x *IndexInfo) saveAsGob() {
 	}
 }
 
-func (x *IndexInfo) savePartitions() {
-	for _, partition := range x.partitions {
-		log.Debugf("start saving Partition %v\n", partition.Index)
-		partition.printPartition()
-
-		partition.saveAsGob()
-
-		// save metadata tree inside the partition
-		savePartitionMetaGob(partition.Index, partition.metadataTree)
-	}
+func (indexInfo *IndexInfo) clearPartitions() {
+	indexInfo.partitionsCache.Clear()
+	indexInfo.metaCache.Clear()
+	indexInfo.filesCache.Clear()
 }
 
-func (x *IndexInfo) removeRoot(root int) {
-	for i, value := range x.Roots {
+func isRoot(path string) int {
+	for _, root := range indexInfo.Roots {
+		parition, ok := indexInfo.partitionsCache.Get(strconv.Itoa(root))
+		if ok && parition.(Partition).Root == path {
+			return root
+		}
+	}
+	return -1
+}
+
+func (indexInfo *IndexInfo) removeRoot(root int) {
+	for i, value := range indexInfo.Roots {
 		if value == root {
-			x.Roots[i] = x.Roots[len(x.Roots)-1]
-			x.Roots = x.Roots[:len(x.Roots)-1]
+			indexInfo.Roots[i] = indexInfo.Roots[len(indexInfo.Roots)-1]
+			indexInfo.Roots = indexInfo.Roots[:len(indexInfo.Roots)-1]
 			break
 		}
 	}

@@ -1,67 +1,65 @@
 package structures
 
-import (
-	"strconv"
-
-	utils "dlocate/osutils"
-
-	log "github.com/sirupsen/logrus"
-)
-
 //Cache is a generic struct to LRU cache different paritions data
 type Cache struct {
 	capacity      int
-	path          string
-	content       map[int]interface{}
+	content       map[string]interface{}
 	cached        int
 	requestIndex  int
-	lastRequested map[int]int
+	lastRequested map[string]int
 }
 
 //GetCache create and return a new cache object using a path and a capacity limit
-func GetCache(capacity int, path string) Cache {
-	return Cache{capacity: capacity, path: path, content: make(map[int]interface{}), cached: 0, requestIndex: 1, lastRequested: make(map[int]int)}
+func GetCache(capacity int) Cache {
+	return Cache{capacity: capacity, content: make(map[string]interface{}), cached: 0, requestIndex: 1, lastRequested: make(map[string]int)}
 }
 
 //Get returns a pointer to a parition specific object with an index
-func (cache *Cache) Get(index int) *interface{} {
-	cache.addIndex(index)
-	if cache.cached > cache.capacity {
-		cache.removeLeastUsed()
-	}
-
+func (cache *Cache) Get(key string) (interface{}, bool) {
 	//cache hit
-	if val, ok := cache.content[index]; ok {
-		return &val
+	if val, ok := cache.content[key]; ok {
+		cache.addIndex(key)
+		return val, true
 	}
 
 	//cache miss
-	path := cache.path + strconv.Itoa(index) + ".gob"
+	return nil, false
+}
 
-	var object interface{}
-	err := utils.ReadGob(path, object)
-	if err != nil {
-		log.Errorf("Error while reading object for partition %q: %v\n", index, err)
+//Clear remove all objects from cache
+func (cache *Cache) Clear() {
+	cache.cached = 0
+	cache.content = make(map[string]interface{})
+	cache.requestIndex = 1
+	cache.lastRequested = make(map[string]int)
+}
+
+//Set save a specific value into an object
+func (cache *Cache) Set(key string, object interface{}) {
+	cache.content[key] = object
+
+	cache.addIndex(key)
+	if cache.cached > cache.capacity {
+		cache.removeLeastUsed()
 	}
-	return &object
 }
 
 //Delete removes a cached object from the cache
-func (cache *Cache) Delete(index int) {
-	delete(cache.lastRequested, index)
-	delete(cache.content, index)
+func (cache *Cache) Delete(key string) {
+	delete(cache.lastRequested, key)
+	delete(cache.content, key)
 	cache.cached = len(cache.lastRequested)
 }
 
-func (cache *Cache) addIndex(index int) {
-	cache.lastRequested[index] = cache.requestIndex
+func (cache *Cache) addIndex(key string) {
+	cache.lastRequested[key] = cache.requestIndex
 	cache.requestIndex++
 	cache.cached = len(cache.lastRequested)
 }
 
 func (cache *Cache) removeLeastUsed() {
-	var minValue = 0
-	var minIndex = -1
+	var minValue = 1000000000
+	var minIndex = ""
 
 	for k, v := range cache.lastRequested {
 		if v < minValue {
@@ -71,4 +69,5 @@ func (cache *Cache) removeLeastUsed() {
 	}
 	delete(cache.lastRequested, minIndex)
 	delete(cache.content, minIndex)
+	cache.cached = len(cache.lastRequested)
 }

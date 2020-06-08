@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 
 	utils "dlocate/osutils"
 
@@ -12,7 +13,6 @@ import (
 func update(path string) bool {
 	directoryPartition = getDirectoryPartition()
 	indexInfo = getIndexInfo()
-	indexInfo.loadRoots()
 
 	if directoryPartition.getPathPartition(path) == -1 {
 		log.Warn("The path hasn't been indexed, index it first")
@@ -22,8 +22,9 @@ func update(path string) bool {
 	filepath.Walk(path, updateIfChanged)
 
 	//delete directories info that was deleted
-	for _, partition := range indexInfo.partitions {
-		// partition = indexInfo.getPartition(partitionIndex)
+
+	for index := 1; index < indexInfo.CurIndex; index++ {
+		partition := indexInfo.getPartition(index)
 		for directory, toBeDeleted := range partition.toBeDeleted {
 			if toBeDeleted {
 				log.Warnf("Directory %v has been deleted "+
@@ -31,10 +32,9 @@ func update(path string) bool {
 				partition.clearDir(partition.Root + directory[:len(directory)-1])
 			}
 		}
-
 	}
 
-	indexInfo.savePartitions()
+	indexInfo.clearPartitions()
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
 
@@ -51,7 +51,8 @@ func updateIfChanged(path string, info os.FileInfo, err error) error {
 		partitionIndex := directoryPartition.getPathPartition(path)
 		partition := indexInfo.getPartition(partitionIndex)
 		if partition.filePaths == nil {
-			partition.filePaths = readPartitionFilesGob(partitionIndex)
+			partitionFiles, _ := indexInfo.filesCache.Get(strconv.Itoa(partitionIndex))
+			partition.filePaths = partitionFiles.(map[string][]string)
 		}
 		if partition.toBeDeleted == nil {
 			partition.toBeDeleted = make(map[string]bool)
@@ -70,7 +71,7 @@ func updateIfChanged(path string, info os.FileInfo, err error) error {
 			log.WithFields(log.Fields{
 				"Path": path,
 			}).Infof("New Directory :")
-			indexDir(path, partition) // index the directoy and its subdirectories
+			indexDir(path, &partition) // index the directoy and its subdirectories
 
 			// update lastchanged as folder is already indexed
 			partition.Directories[relativePath] = lastChanged

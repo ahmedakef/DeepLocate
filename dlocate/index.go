@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 
 	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
@@ -13,20 +14,17 @@ import (
 const filesLimit = 100
 
 var directoryPartition DirectoryPartition
-var indexInfo IndexInfo
 var invertedIndex structure.InvertedIndex
 
 func startIndexing(path string) {
 	//load index and check for repeated indexing
-	indexInfo = getIndexInfo()
-	indexInfo.loadRoots()
 	if isRoot(path) != -1 {
 		return
 	}
 
 	indexPath(path)
 
-	indexInfo.savePartitions()
+	indexInfo.clearPartitions()
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
 	invertedIndex.Save()
@@ -39,7 +37,8 @@ func indexPath(path string) {
 
 	invertedIndex.Load()
 
-	indexDir(path, root)
+	indexDir(path, &root)
+	savePartition(&root)
 }
 
 func indexDir(path string, root *Partition) {
@@ -49,16 +48,18 @@ func indexDir(path string, root *Partition) {
 		if file.IsDir {
 			indexedUnder := isRoot(file.Path)
 			if indexedUnder != -1 {
-				root.addChild(indexInfo.partitions[indexedUnder])
+				parition := indexInfo.getPartition(indexedUnder)
+				root.addChild(&parition)
 				indexInfo.removeRoot(indexedUnder)
 				continue
 			}
 			if root.FilesNumber >= filesLimit {
 				child := NewPartition(indexInfo.getNextPartitionIndex(), file.Path)
 				indexDir(file.Path, &child)
-				indexInfo.addPartition(&child)
+				indexInfo.addPartition(child)
 				directoryPartition[filepath.ToSlash(file.Path)] = child.Index
 				root.addChild(&child)
+				savePartition(&child)
 			} else {
 				indexDir(file.Path, root)
 			}
@@ -66,13 +67,13 @@ func indexDir(path string, root *Partition) {
 	}
 }
 
-func isRoot(path string) int {
-	for _, root := range indexInfo.Roots {
-		if indexInfo.partitions[root].Root == path {
-			return root
-		}
-	}
-	return -1
+func savePartition(partition *Partition) {
+	savePartitionGob(partition)
+	savePartitionFilesGob(partition.Index, partition.filePaths)
+	savePartitionMetaGob(partition.Index, partition.metadataTree)
+	indexInfo.partitionsCache.Delete(strconv.Itoa(partition.Index))
+	indexInfo.metaCache.Delete(strconv.Itoa(partition.Index))
+	indexInfo.filesCache.Delete(strconv.Itoa(partition.Index))
 }
 
 func clearIndex() {
