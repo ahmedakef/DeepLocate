@@ -33,13 +33,13 @@ type Partition struct {
 func NewPartition(index int, root string) Partition {
 	return Partition{
 		Index: index, Root: root, Directories: make(map[string]time.Time),
+		Children:  make([]int, 0),
 		filePaths: make(map[string][]string), FilesNumber: 0,
 		Extenstion: newSignatureFile(), ExtenstionH: newSignatureFileH(),
 	}
 }
 
 func (p *Partition) addDir(path string) {
-
 	lastChanged := utils.GetFileMetadata(path).CTime
 	relativePath := p.getRelativePath(path)
 
@@ -47,12 +47,10 @@ func (p *Partition) addDir(path string) {
 	cnt := 0
 	for _, file := range files {
 		if !file.IsDir {
-
 			p.filePaths[relativePath] = append(p.filePaths[relativePath], file.Name)
 			p.metadataTree.Insert(&file)
 			cnt++
 			p.addExtension(file.Extension)
-
 			//TODO fill content map for other formats
 			if file.Extension == "txt" {
 				invertedIndex.Insert(p.Index, file.Path, readTxt(file.Path))

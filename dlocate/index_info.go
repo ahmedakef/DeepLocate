@@ -65,11 +65,11 @@ func (indexInfo *IndexInfo) getNextPartitionIndex() int {
 func (indexInfo *IndexInfo) addRoot(path string) Partition {
 	root := NewPartition(indexInfo.getNextPartitionIndex(), path)
 	indexInfo.Roots = append(indexInfo.Roots, root.Index)
-	indexInfo.addPartition(&root)
+	indexInfo.addPartition(root)
 	return root
 }
 
-func (indexInfo *IndexInfo) addPartition(p *Partition) {
+func (indexInfo *IndexInfo) addPartition(p Partition) {
 	indexInfo.partitionsCache.Set(strconv.Itoa(p.Index), p)
 }
 
@@ -77,7 +77,7 @@ func (indexInfo *IndexInfo) getPartition(index int) Partition {
 	partition, ok := indexInfo.partitionsCache.Get(strconv.Itoa(index))
 	if !ok {
 		p := readPartitionGob(index)
-		indexInfo.addPartition(&p)
+		indexInfo.addPartition(p)
 		return p
 	}
 	return partition.(Partition)
@@ -93,7 +93,7 @@ func (indexInfo *IndexInfo) saveAsGob() {
 	}
 }
 
-func (indexInfo *IndexInfo) savePartitions() {
+func (indexInfo *IndexInfo) clearPartitions() {
 	indexInfo.partitionsCache.Clear()
 	indexInfo.metaCache.Clear()
 	indexInfo.filesCache.Clear()

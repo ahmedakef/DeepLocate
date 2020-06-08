@@ -24,7 +24,7 @@ func startIndexing(path string) {
 
 	indexPath(path)
 
-	indexInfo.savePartitions()
+	indexInfo.clearPartitions()
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
 	invertedIndex.Save()
@@ -38,6 +38,7 @@ func indexPath(path string) {
 	invertedIndex.Load()
 
 	indexDir(path, &root)
+	savePartition(&root)
 }
 
 func indexDir(path string, root *Partition) {
@@ -47,22 +48,32 @@ func indexDir(path string, root *Partition) {
 		if file.IsDir {
 			indexedUnder := isRoot(file.Path)
 			if indexedUnder != -1 {
-				parition, _ := indexInfo.partitionsCache.Get(strconv.Itoa(indexedUnder))
-				root.addChild(parition.(*Partition))
+				parition := indexInfo.getPartition(indexedUnder)
+				root.addChild(&parition)
 				indexInfo.removeRoot(indexedUnder)
 				continue
 			}
 			if root.FilesNumber >= filesLimit {
 				child := NewPartition(indexInfo.getNextPartitionIndex(), file.Path)
 				indexDir(file.Path, &child)
-				indexInfo.addPartition(&child)
+				indexInfo.addPartition(child)
 				directoryPartition[filepath.ToSlash(file.Path)] = child.Index
 				root.addChild(&child)
+				savePartition(&child)
 			} else {
 				indexDir(file.Path, root)
 			}
 		}
 	}
+}
+
+func savePartition(partition *Partition) {
+	savePartitionGob(partition)
+	savePartitionFilesGob(partition.Index, partition.filePaths)
+	savePartitionMetaGob(partition.Index, partition.metadataTree)
+	indexInfo.partitionsCache.Delete(strconv.Itoa(partition.Index))
+	indexInfo.metaCache.Delete(strconv.Itoa(partition.Index))
+	indexInfo.filesCache.Delete(strconv.Itoa(partition.Index))
 }
 
 func clearIndex() {

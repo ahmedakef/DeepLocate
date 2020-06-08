@@ -48,7 +48,7 @@ func (invertedIndex *InvertedIndex) Insert(partition int, file string, contents 
 
 //Search the content index for a title (put limit = -1 for all results)
 func (invertedIndex *InvertedIndex) Search(partitions []int, query string, limit int) []string {
-	words := strings.SplitN(query, " ", 1)
+	words := strings.Fields(query)
 	scores := make(map[pair]float32)
 
 	for _, word := range words {
@@ -74,7 +74,15 @@ func (invertedIndex *InvertedIndex) Search(partitions []int, query string, limit
 		limit = len(values)
 	}
 
-	scoreLimit := values[len(values)-limit]
+	if len(values) == 0 {
+		return []string{}
+	}
+
+	limitIndex := len(values) - limit
+	if limitIndex < 0 {
+		limitIndex = 0
+	}
+	scoreLimit := values[limitIndex]
 
 	results := []string{}
 	for fileKey, score := range scores {
@@ -113,15 +121,20 @@ func (invertedIndex *InvertedIndex) Load() {
 }
 
 func (invertedIndex *InvertedIndex) loadPartitionDir(partitionID int) {
-	if invertedIndex.filesToIndices[partitionID] != nil {
-		return
-	}
-	partitionDir, ok := invertedIndex.filesToIndicesCache.Get(strconv.Itoa(partitionID))
+	pDir, ok := invertedIndex.filesToIndicesCache.Get(strconv.Itoa(partitionID))
 	if ok {
-		invertedIndex.filesToIndices[partitionID] = partitionDir.(map[int]string)
+		invertedIndex.filesToIndices[partitionID] = pDir.(map[int]string)
 		return
 	}
-	invertedIndex.filesToIndices[partitionID] = make(map[int]string)
+
+	path := "indexFiles/content/filesToIndices" + strconv.Itoa(partitionID) + ".gob"
+
+	var partitionDir map[int]string
+	err := utils.ReadGob(path, &partitionDir)
+	if err != nil {
+		invertedIndex.filesToIndices[partitionID] = make(map[int]string)
+	}
+	invertedIndex.filesToIndices[partitionID] = partitionDir
 }
 
 func (invertedIndex *InvertedIndex) savePartitionDir(partitionID int) {
@@ -134,9 +147,6 @@ func (invertedIndex *InvertedIndex) savePartitionDir(partitionID int) {
 }
 
 func (invertedIndex *InvertedIndex) loadPartitionInvertedIndex(partition int, keyword string) {
-	if invertedIndex.content[keyword][partition] != nil {
-		return
-	}
 	key := keyword + "-" + strconv.Itoa(partition)
 
 	if invertedIndex.content[keyword] == nil {
@@ -150,13 +160,20 @@ func (invertedIndex *InvertedIndex) loadPartitionInvertedIndex(partition int, ke
 		return
 	}
 
-	invertedIndex.content[keyword][partition] = make(map[int]float32)
+	path := "indexFiles/content/" + keyword + "-" + strconv.Itoa(partition) + ".gob"
+	var parInvertedIndex map[int]float32
+
+	err := utils.ReadGob(path, &parInvertedIndex)
+
+	if err != nil {
+		invertedIndex.content[keyword][partition] = make(map[int]float32)
+	}
+
+	invertedIndex.content[keyword][partition] = parInvertedIndex
 }
 
 func (invertedIndex *InvertedIndex) savePartitionInvertedIndex(partition int, keyword string) {
 	path := "indexFiles/content/" + keyword + "-" + strconv.Itoa(partition) + ".gob"
-
-	log.Debug(path)
 
 	err := utils.SaveGob(invertedIndex.content[keyword][partition], path)
 	if err != nil {

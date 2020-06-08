@@ -32,10 +32,9 @@ func update(path string) bool {
 				partition.clearDir(partition.Root + directory[:len(directory)-1])
 			}
 		}
-
 	}
 
-	indexInfo.savePartitions()
+	indexInfo.clearPartitions()
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
 

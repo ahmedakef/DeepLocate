@@ -78,29 +78,28 @@ func readPartitionGob(index int) Partition {
 	var partition Partition
 	err := utils.ReadGob(path, &partition)
 	if err != nil {
-		log.Errorf("Error while reading index for partition %q: %v\n", index, err)
+		log.Errorf("Error while reading partition %v: %v\n", strconv.Itoa(index), err)
 		os.Exit(1)
 	}
 	partition.Root = filepath.FromSlash(partition.Root)
 	return partition
 }
 
-func savePartitionGob(p Partition) {
+func savePartitionGob(p *Partition) {
 	p.Root = filepath.ToSlash(p.Root)
 	partitionsPath := filepath.FromSlash("indexFiles/partitions/")
 	if _, err := os.Stat(partitionsPath); os.IsNotExist(err) {
 		os.MkdirAll(partitionsPath, os.ModePerm)
 	}
 
+	log.Debug(p.Extenstion.Data)
+
 	path := "indexFiles/partitions/p" + strconv.Itoa(p.Index)
 
 	err := utils.SaveGob(p, path+".gob")
 
-	// save files inside the partition
-	savePartitionFilesGob(p.Index, p.filePaths)
-
 	if err != nil {
-		log.Errorf("Error while storing index for partition %v: %v\n", p.Index, err)
+		log.Errorf("Error while storing index for partition %v: %v\n", strconv.Itoa(p.Index), err)
 		os.Exit(1)
 	}
 }

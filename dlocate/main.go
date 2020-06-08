@@ -38,11 +38,11 @@ func main() {
 		update(root)
 	} else if op == "searchNames" {
 		word := *searchWord
-		word = "run"
+		//word = "run"
 		find(word, root, false)
 	} else if op == "searchContent" {
 		word := *searchWord
-		word = "run"
+		//word = "run"
 		find(word, root, true)
 	} else {
 		log.Info("Please select correct operation")
