@@ -101,8 +101,8 @@ func (indexInfo *IndexInfo) clearPartitions() {
 
 func isRoot(path string) int {
 	for _, root := range indexInfo.Roots {
-		parition, ok := indexInfo.partitionsCache.Get(strconv.Itoa(root))
-		if ok && parition.(Partition).Root == path {
+		parition := indexInfo.getPartition(root)
+		if parition.Root == path {
 			return root
 		}
 	}

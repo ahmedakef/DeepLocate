@@ -23,7 +23,7 @@ func update(path string) bool {
 
 	//delete directories info that was deleted
 
-	for index := 1; index < indexInfo.CurIndex; index++ {
+	for index := 1; index <= indexInfo.CurIndex; index++ {
 		partition := indexInfo.getPartition(index)
 		for directory, toBeDeleted := range partition.toBeDeleted {
 			if toBeDeleted {
