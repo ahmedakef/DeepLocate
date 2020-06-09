@@ -133,6 +133,7 @@ func (invertedIndex *InvertedIndex) loadPartitionDir(partitionID int) {
 	err := utils.ReadGob(path, &partitionDir)
 	if err != nil {
 		invertedIndex.filesToIndices[partitionID] = make(map[int]string)
+		return
 	}
 	invertedIndex.filesToIndices[partitionID] = partitionDir
 }
@@ -167,6 +168,7 @@ func (invertedIndex *InvertedIndex) loadPartitionInvertedIndex(partition int, ke
 
 	if err != nil {
 		invertedIndex.content[keyword][partition] = make(map[int]float32)
+		return
 	}
 
 	invertedIndex.content[keyword][partition] = parInvertedIndex
