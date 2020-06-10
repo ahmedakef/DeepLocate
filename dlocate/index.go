@@ -16,8 +16,11 @@ const filesLimit = 100
 var invertedIndex structure.InvertedIndex
 
 func startIndexing(path string) {
-	//load index and check for repeated indexing
-	if isRoot(path) != -1 {
+
+	// check for repeated indexing
+	partitionIndex := directoryPartition.getPathPartition(path)
+	if partitionIndex != -1 {
+		log.Info("this path have been indexed before, you can try update")
 		return
 	}
 
@@ -44,8 +47,8 @@ func indexDir(path string, root *Partition) {
 	root.addDir(path)
 	for _, file := range files {
 		if file.IsDir {
-			indexedUnder := isRoot(file.Path)
-			if indexedUnder != -1 {
+			indexedUnder, foundAsRoot := isRoot(file.Path)
+			if foundAsRoot {
 				parition := indexInfo.getPartition(indexedUnder)
 				root.addChild(&parition)
 				indexInfo.removeRoot(indexedUnder)

@@ -104,14 +104,18 @@ func (indexInfo *IndexInfo) clearPartitions() {
 	indexInfo.filesCache.Clear()
 }
 
-func isRoot(path string) int {
+func isRoot(path string) (int, bool) {
+	partitionIndex := directoryPartition.getPathPartition(path)
+
 	for _, root := range indexInfo.Roots {
-		parition := indexInfo.getPartition(root)
-		if parition.Root == path {
-			return root
+		if partitionIndex == root {
+			parition := indexInfo.getPartition(root)
+			if parition.Root == path {
+				return root, true
+			}
 		}
 	}
-	return -1
+	return 0, false
 }
 
 func (indexInfo *IndexInfo) removeRoot(root int) {
