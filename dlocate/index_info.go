@@ -19,6 +19,8 @@ type IndexInfo struct {
 	partitionsCache   structure.Cache
 	metaCache         structure.Cache
 	filesCache        structure.Cache
+
+	updatedPartitions map[int]*Partition
 }
 
 func getIndexInfo() IndexInfo {
@@ -40,6 +42,9 @@ func getIndexInfo() IndexInfo {
 	indexInfo.partitionsCache = structure.GetCache(100)
 	indexInfo.metaCache = structure.GetCache(100)
 	indexInfo.filesCache = structure.GetCache(100)
+
+	indexInfo.updatedPartitions = make(map[int]*Partition)
+
 	return indexInfo
 }
 

@@ -13,7 +13,6 @@ import (
 
 const filesLimit = 100
 
-var directoryPartition DirectoryPartition
 var invertedIndex structure.InvertedIndex
 
 func startIndexing(path string) {
@@ -32,7 +31,6 @@ func startIndexing(path string) {
 
 func indexPath(path string) {
 	root := indexInfo.addRoot(path)
-	directoryPartition = getDirectoryPartition()
 	directoryPartition[filepath.ToSlash(path)] = root.Index
 
 	invertedIndex.Load()
@@ -74,6 +72,9 @@ func savePartition(partition *Partition) {
 	indexInfo.partitionsCache.Delete(strconv.Itoa(partition.Index))
 	indexInfo.metaCache.Delete(strconv.Itoa(partition.Index))
 	indexInfo.filesCache.Delete(strconv.Itoa(partition.Index))
+
+	partition.printPartition()
+
 }
 
 func clearIndex() {

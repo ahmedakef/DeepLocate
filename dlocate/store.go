@@ -13,6 +13,11 @@ import (
 
 func savePartitionFilesGob(partitionIndex int, partitionFiles map[string][]string) {
 
+	// the app haven't loaded the partition files
+	if partitionFiles == nil {
+		return
+	}
+
 	filePathsPath := filepath.FromSlash("indexFiles/filepaths/")
 	if _, err := os.Stat(filePathsPath); os.IsNotExist(err) {
 		os.MkdirAll(filePathsPath, os.ModePerm)
@@ -44,6 +49,10 @@ func readPartitionFilesGob(partitionIndex int) map[string][]string {
 
 func savePartitionMetaGob(partitionIndex int, tree structure.KDTree) {
 
+	// the app haven't loaded the metadata
+	if tree.Root == nil {
+		return
+	}
 	metadataPath := filepath.FromSlash("indexFiles/metadata/")
 	if _, err := os.Stat(metadataPath); os.IsNotExist(err) {
 		os.MkdirAll(metadataPath, os.ModePerm)
@@ -91,8 +100,6 @@ func savePartitionGob(p *Partition) {
 	if _, err := os.Stat(partitionsPath); os.IsNotExist(err) {
 		os.MkdirAll(partitionsPath, os.ModePerm)
 	}
-
-	log.Debug(p.Extenstion.Data)
 
 	path := "indexFiles/partitions/p" + strconv.Itoa(p.Index)
 

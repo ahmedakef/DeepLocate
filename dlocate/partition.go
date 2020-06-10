@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"strconv"
 	"strings"
 	"time"
 
@@ -77,6 +78,16 @@ func readTxt(path string) map[string]float32 {
 	}
 
 	return fileContent
+}
+
+func (p *Partition) getPartitionFiles() map[string][]string {
+	partitionFiles, ok := indexInfo.filesCache.Get(strconv.Itoa(p.Index))
+	if !ok {
+		pF := readPartitionFilesGob(p.Index)
+		indexInfo.filesCache.Set(strconv.Itoa(p.Index), pF)
+		return pF
+	}
+	return partitionFiles.(map[string][]string)
 }
 
 func (p *Partition) clearDir(path string) {

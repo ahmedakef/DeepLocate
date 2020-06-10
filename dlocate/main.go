@@ -12,6 +12,7 @@ var destination = flag.String("d", "./", "the search directory")
 var searchWord = flag.String("s", "", "the search word")
 
 var indexInfo IndexInfo
+var directoryPartition DirectoryPartition
 
 func main() {
 
@@ -29,6 +30,7 @@ func main() {
 	}
 
 	indexInfo = getIndexInfo()
+	directoryPartition = getDirectoryPartition()
 
 	if op == "index" {
 		startIndexing(root)
