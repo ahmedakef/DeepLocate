@@ -139,8 +139,12 @@ class TextRank4Keyword():
 
 def analyze_text(d , numbers = 30):
     dic = {}
-    for filename,name in d:
-        content = read_files(filename)
+    for filename, name in d:
+        try:
+            content = read_files(filename)
+        except:
+            continue
+
         tr4w = TextRank4Keyword()
         tr4w.analyze(content, candidate_pos = ['NOUN' , 'PROPN' , 'VERB' , 'ADJ'], window_size=4)
         dic[filename] = tr4w.get_keywords(numbers)
