@@ -3,28 +3,47 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os/exec"
+
+	log "github.com/sirupsen/logrus"
 )
 
-func main() {
-	cmd := exec.Command("python", "foo.py", "khaled.pdf")
+var pythonCode = ""
+
+func executeScript(scriptName string, parameters string, object interface{}) error {
+	cmd := exec.Command("python", pythonCode+scriptName, parameters)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return err
 	}
+
 	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return err
 	}
-	var person struct {
-		Name     string
-		FileName string
-	}
-	if err := json.NewDecoder(stdout).Decode(&person); err != nil {
-		log.Fatal(err)
+
+	if err := json.NewDecoder(stdout).Decode(&object); err != nil {
+		log.Error(err)
+		return err
 	}
 	if err := cmd.Wait(); err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return err
 	}
-	fmt.Printf("%s is %s in the disk\n", person.Name, person.FileName)
+	return nil
+}
+
+// Person ahmed
+type Person struct {
+	Name     string
+	FileName string
+}
+
+func main() {
+
+	var person Person
+	executeScript("foo.py", "funcky", &person)
+	fmt.Printf("%s is %s on the disk\n", person.Name, person.FileName)
+
 }
