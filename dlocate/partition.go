@@ -52,10 +52,12 @@ func (p *Partition) addDir(path string) {
 			p.metadataTree.Insert(&file)
 			cnt++
 			p.addExtension(file.Extension)
-			//TODO fill content map for other formats
-			if file.Extension == "txt" {
-				invertedIndex.Insert(p.Index, file.Path, readTxt(file.Path))
+
+			if deepScan {
+				content := filesContent[file.Path]
+				invertedIndex.Insert(p.Index, file.Path, content)
 			}
+
 		}
 	}
 	p.FilesNumber += cnt

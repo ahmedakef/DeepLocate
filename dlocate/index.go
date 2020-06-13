@@ -7,6 +7,7 @@ import (
 
 	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
+	python "dlocate/python"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -16,6 +17,13 @@ const filesLimit = 100
 var invertedIndex structure.InvertedIndex
 
 func startIndexing(path string) {
+
+	if deepScan {
+		log.Info("get all files content from the machine learning model")
+		log.Info("This should take some minutes ...")
+		python.ExecuteScript("Extract.py", path, &filesContent)
+		log.Info("Finished reading all files content in the given path")
+	}
 
 	// check for repeated indexing
 	partitionIndex := directoryPartition.getPathPartition(path)

@@ -3,9 +3,9 @@ package structures
 import (
 	"sort"
 	"strconv"
-	"strings"
 
 	utils "dlocate/osutils"
+	python "dlocate/python"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -36,10 +36,7 @@ func (invertedIndex *InvertedIndex) Insert(partition int, file string, contents 
 		invertedIndex.savePartitionDir(partition)
 	}
 	for word, freq := range contents {
-		if isFiltered(word) {
-			continue
-		}
-		word = stem(word)
+
 		invertedIndex.loadPartitionInvertedIndex(partition, word)
 		invertedIndex.content[word][partition][fileID] = freq
 		invertedIndex.savePartitionInvertedIndex(partition, word)
@@ -48,14 +45,14 @@ func (invertedIndex *InvertedIndex) Insert(partition int, file string, contents 
 
 //Search the content index for a title (put limit = -1 for all results)
 func (invertedIndex *InvertedIndex) Search(partitions []int, query string, limit int) []string {
-	words := strings.Fields(query)
+
+	var words []string
+	python.ExecuteScript("keyword_extraction/text_cleaning.py", query, &words)
+
 	scores := make(map[pair]float32)
 
 	for _, word := range words {
-		if isFiltered(word) {
-			continue
-		}
-		word = stem(word)
+
 		for _, partition := range partitions {
 			invertedIndex.loadPartitionInvertedIndex(partition, word)
 			files := invertedIndex.content[word][partition]
@@ -182,17 +179,6 @@ func (invertedIndex *InvertedIndex) savePartitionInvertedIndex(partition int, ke
 		log.Error(err)
 	}
 	invertedIndex.contentCache.Delete(keyword + "-" + strconv.Itoa(partition))
-}
-
-//TODO stem words
-func stem(word string) string {
-	newWord := word
-	return newWord
-}
-
-//TODO filter words
-func isFiltered(word string) bool {
-	return false
 }
 
 type pair struct {

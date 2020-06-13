@@ -6,11 +6,19 @@ import (
 	"strings"
 
 	utils "dlocate/osutils"
+	python "dlocate/python"
 
 	log "github.com/sirupsen/logrus"
 )
 
 func update(path string) bool {
+
+	if deepScan {
+		log.Info("get all files content from the machine learning model")
+		log.Info("This should take some minutes ...")
+		python.ExecuteScript("Extract.py", path, &filesContent)
+		log.Info("Finished reading all files content in the given path")
+	}
 
 	if directoryPartition.getPathPartition(path) == -1 {
 		log.Warn("The path hasn't been indexed, index it first")
@@ -23,7 +31,7 @@ func update(path string) bool {
 	for _, partition := range indexInfo.updatedPartitions {
 		// partition = indexInfo.getPartition(partitionIndex)
 		for directory, toBeDeleted := range partition.toBeDeleted {
-			directorInSearch := strings.HasPrefix(partition.Root+directory, path)
+			directorInSearch := strings.HasPrefix(partition.Root+directory, path+"/")
 			if toBeDeleted && directorInSearch {
 				log.Warnf("Directory %v has been deleted "+
 					"and will be removed from index", directory)

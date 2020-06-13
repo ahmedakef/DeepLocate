@@ -7,45 +7,47 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var operation = flag.String("o", "index", "the operation to do (index or search or clear")
-var destination = flag.String("d", "./", "the search directory")
-var searchWord = flag.String("s", "", "the search word")
-
 var indexInfo IndexInfo
 var directoryPartition DirectoryPartition
+var filesContent map[string]map[string]float32
+
+var deepScan bool
 
 func main() {
 
 	log.SetLevel(log.DebugLevel)
 
-	flag.Parse()
-	root := *destination
-	op := *operation
+	var operation, destination, searchWord string
 
-	// root = "/home/ahmed/Downloads/cloud computing/"
-	// op = "index"
+	flag.StringVar(&operation, "o", "index", "the operation to do (index or search or clear")
+	flag.StringVar(&destination, "d", "./", "the search directory")
+	flag.StringVar(&searchWord, "s", "", "the search word")
+	flag.BoolVar(&deepScan, "deepScan", false, "Use machine learning to get content of the file")
+
+	flag.Parse()
+
+	// destination = "/home/ahmed/Downloads/cloud computing/"
+	// operation = "index"
+	// searchWord = "run"
+
 	// remove trailling backslash
-	if filepath.ToSlash(root)[len(root)-1] == '/' {
-		root = root[:len(root)-1]
+	if filepath.ToSlash(destination)[len(destination)-1] == '/' {
+		destination = destination[:len(destination)-1]
 	}
 
 	indexInfo = getIndexInfo()
 	directoryPartition = getDirectoryPartition()
 
-	if op == "index" {
-		startIndexing(root)
-	} else if op == "clear" {
+	if operation == "index" {
+		startIndexing(destination)
+	} else if operation == "clear" {
 		clearIndex()
-	} else if op == "update" {
-		update(root)
-	} else if op == "searchNames" {
-		word := *searchWord
-		// word = "run"
-		find(word, root, false)
-	} else if op == "searchContent" {
-		word := *searchWord
-		// word = "run"
-		find(word, root, true)
+	} else if operation == "update" {
+		update(destination)
+	} else if operation == "searchNames" {
+		find(searchWord, destination, false)
+	} else if operation == "searchContent" {
+		find(searchWord, destination, true)
 	} else {
 		log.Info("Please select correct operation")
 	}

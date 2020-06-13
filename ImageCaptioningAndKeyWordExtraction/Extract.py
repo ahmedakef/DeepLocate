@@ -1,7 +1,10 @@
 import sys
 import os
 import logging
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+logging.disable(logging.WARNING)
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+
 
 from keyword_extraction.text_extract import analyze_text
 from image_captioning.generate_folder import analyze_image
@@ -29,6 +32,7 @@ def getPathContent(path):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
+        
         path = str(sys.argv[1])
 
         Image_dict, doc_dict = getPathContent(path)

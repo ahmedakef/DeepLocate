@@ -1,6 +1,10 @@
 import os
 import sys
 
+# ignore tensorflow wanrnings
+import logging
+logging.basicConfig(level=logging.INFO)
+
 stderr = sys.stderr
 sys.stderr = open(os.devnull, 'w')
 import keras

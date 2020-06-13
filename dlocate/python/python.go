@@ -1,17 +1,18 @@
-package main
+package python
 
 import (
 	"encoding/json"
-	"fmt"
 	"os/exec"
 
 	log "github.com/sirupsen/logrus"
 )
 
-var pythonCode = ""
+var pythonDirectory = "../ImageCaptioningAndKeyWordExtraction/"
 
-func executeScript(scriptName string, parameters string, object interface{}) error {
-	cmd := exec.Command("python", pythonCode+scriptName, parameters)
+// ExecuteScript run python script and decode its stdout to object
+func ExecuteScript(scriptName string, parameters string, object interface{}) error {
+	cmd := exec.Command("python", "-W ignore", pythonDirectory+scriptName, parameters)
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Error(err)
@@ -40,10 +41,16 @@ type Person struct {
 	FileName string
 }
 
+var filesContent map[string]map[string]float32
+
 func main() {
 
-	var person Person
-	executeScript("foo.py", "funcky", &person)
-	fmt.Printf("%s is %s on the disk\n", person.Name, person.FileName)
+	ExecuteScript("Extract.py", "/home/ahmed/Downloads/cloud computing/", &filesContent)
+
+	log.Info(filesContent)
+
+	// var person Person
+	// ExecuteScript("foo.py", "funcky", &person)
+	// log.Infof("%s is %s on the disk\n", person.Name, person.FileName)
 
 }
