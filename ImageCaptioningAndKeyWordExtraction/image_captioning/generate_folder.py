@@ -1,11 +1,5 @@
 import os
 import sys
-import logging
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-logging.disable(logging.WARNING)
-import tensorflow
-logging.getLogger('tensorflow').disabled = True
-
 
 from pickle import load
 from numpy import argmax

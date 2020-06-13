@@ -2,10 +2,6 @@ import sys
 import os
 import logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-logging.disable(logging.WARNING)
-import tensorflow
-logging.getLogger('tensorflow').disabled = True
-
 
 from keyword_extraction.text_extract import analyze_text
 from image_captioning.generate_folder import analyze_image
