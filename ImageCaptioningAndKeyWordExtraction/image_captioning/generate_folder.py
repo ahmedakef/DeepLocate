@@ -1,6 +1,11 @@
 import os
 import sys
 
+stderr = sys.stderr
+sys.stderr = open(os.devnull, 'w')
+import keras
+sys.stderr = stderr
+
 from pickle import load
 from numpy import argmax
 from keras.preprocessing.sequence import pad_sequences
