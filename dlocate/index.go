@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,7 +17,15 @@ const filesLimit = 100
 
 var invertedIndex structure.InvertedIndex
 
-func startIndexing(path string) {
+func startIndexing(path string) error {
+
+	// check for repeated indexing
+	partitionIndex := directoryPartition.getPathPartition(path)
+	if partitionIndex != -1 {
+		message := "this path have been indexed before, you can try update"
+		log.Info(message)
+		return errors.New(message)
+	}
 
 	if deepScan {
 		log.Info("get all files content from the machine learning model")
@@ -25,19 +34,17 @@ func startIndexing(path string) {
 		log.Info("Finished reading all files content in the given path")
 	}
 
-	// check for repeated indexing
-	partitionIndex := directoryPartition.getPathPartition(path)
-	if partitionIndex != -1 {
-		log.Info("this path have been indexed before, you can try update")
-		return
-	}
-
 	indexPath(path)
 
 	indexInfo.clearPartitions()
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
 	invertedIndex.Save()
+
+	message := "finished indexing partitions successfully"
+	log.Info(message)
+
+	return nil
 }
 
 func indexPath(path string) {
@@ -88,17 +95,23 @@ func savePartition(partition *Partition) {
 
 }
 
-func clearIndex() {
+func clearIndex() error {
 	os.Remove("indexFiles/directoryPartition.json")
 	err := os.Remove("indexFiles/directoryPartition.gob")
 	if err != nil {
 		log.Error(err)
 	}
+	//clear from memory
+	directoryPartition = make(map[string]int)
+
 	os.Remove("indexFiles/indexInfo.json")
 	err = os.Remove("indexFiles/indexInfo.gob")
 	if err != nil {
 		log.Error(err)
 	}
+	// clear from memory
+	indexInfo = getIndexInfo()
+
 	os.Remove("indexFiles/invertedIndex.json")
 	err = os.Remove("indexFiles/invertedIndex.gob")
 	if err != nil {
@@ -122,4 +135,5 @@ func clearIndex() {
 	}
 
 	log.Info("Index cleared successfully")
+	return nil
 }

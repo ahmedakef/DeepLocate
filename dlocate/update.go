@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,18 +12,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func update(path string) bool {
+func update(path string) error {
+
+	if directoryPartition.getPathPartition(path) == -1 {
+		message := "The path hasn't been indexed, index it first"
+		log.Warn(message)
+		return errors.New(message)
+	}
 
 	if deepScan {
 		log.Info("get all files content from the machine learning model")
 		log.Info("This should take some minutes ...")
 		python.ExecuteScript("Extract.py", path, &filesContent)
 		log.Info("Finished reading all files content in the given path")
-	}
-
-	if directoryPartition.getPathPartition(path) == -1 {
-		log.Warn("The path hasn't been indexed, index it first")
-		return false
 	}
 
 	filepath.Walk(path, updateIfChanged)
@@ -46,7 +48,10 @@ func update(path string) bool {
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
 
-	return true
+	message := "finished updateing partitions successfully"
+	log.Info(message)
+
+	return nil
 }
 
 func updateIfChanged(path string, info os.FileInfo, err error) error {

@@ -37,6 +37,7 @@ func getIndexInfo() IndexInfo {
 			metaCache:         structure.GetCache(100),
 			filesCache:        structure.GetCache(100),
 			Roots:             make([]int, 0),
+			updatedPartitions: make(map[int]*Partition),
 		}
 	}
 	indexInfo.partitionsCache = structure.GetCache(100)

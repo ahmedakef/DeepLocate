@@ -19,7 +19,7 @@ func main() {
 
 	var operation, destination, searchWord string
 
-	flag.StringVar(&operation, "o", "index", "the operation to do (index or search or clear")
+	flag.StringVar(&operation, "o", "", "the operation to do (index or search or clear")
 	flag.StringVar(&destination, "d", "./", "the search directory")
 	flag.StringVar(&searchWord, "s", "", "the search word")
 	flag.BoolVar(&deepScan, "deepScan", false, "Use machine learning to get content of the file")
@@ -27,7 +27,7 @@ func main() {
 	flag.Parse()
 
 	// destination = "/home/ahmed/Downloads/cloud computing/"
-	// operation = "index"
+	// operation = "web"
 	// searchWord = "run"
 
 	// remove trailling backslash
@@ -44,10 +44,10 @@ func main() {
 		clearIndex()
 	} else if operation == "update" {
 		update(destination)
-	} else if operation == "searchNames" {
-		find(searchWord, destination, false)
-	} else if operation == "searchContent" {
-		find(searchWord, destination, true)
+	} else if operation == "search" {
+		find(searchWord, destination, deepScan)
+	} else if operation == "web" {
+		startServer()
 	} else {
 		log.Info("Please select correct operation")
 	}
