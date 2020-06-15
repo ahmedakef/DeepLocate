@@ -95,6 +95,61 @@ func (invertedIndex *InvertedIndex) Search(partitions []int, query string, limit
 	return results
 }
 
+//SearchIn searchs the content index for a query but within a specific files only
+func (invertedIndex *InvertedIndex) SearchIn(partitions []int, query string, limit int, within []string) []string {
+	var words []string
+	python.ExecuteScript("keyword_extraction/text_cleaning.py", query, &words)
+
+	scores := make(map[string]float32)
+	for _, file := range within {
+		scores[file] = 0
+	}
+
+	for _, partition := range partitions {
+		invertedIndex.loadPartitionDir(partition)
+		for _, word := range words {
+			invertedIndex.loadPartitionInvertedIndex(partition, word)
+			for fileID, score := range invertedIndex.content[word][partition] {
+				_, ok := scores[invertedIndex.filesToIndices[partition][fileID]]
+				if ok {
+					scores[invertedIndex.filesToIndices[partition][fileID]] += score
+				}
+			}
+		}
+	}
+
+	values := []float32{}
+	for _, val := range scores {
+		values = append(values, val)
+	}
+	sort.Slice(values, func(i, j int) bool { return values[i] < values[j] })
+
+	if limit == -1 {
+		limit = len(values)
+	}
+
+	if len(values) == 0 {
+		return []string{}
+	}
+
+	limitIndex := len(values) - limit
+	if limitIndex < 0 {
+		limitIndex = 0
+	}
+	scoreLimit := values[limitIndex]
+
+	results := []string{}
+	for file, score := range scores {
+		if score >= scoreLimit {
+			results = append(results, file)
+			if len(results) >= limit {
+				break
+			}
+		}
+	}
+	return results
+}
+
 //Save the inverted Index object
 func (invertedIndex *InvertedIndex) Save() {
 	path := "indexFiles/invertedIndex.gob"
