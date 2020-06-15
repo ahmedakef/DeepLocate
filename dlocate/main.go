@@ -14,12 +14,15 @@ var searchWord = flag.String("s", "", "the search word")
 var indexInfo IndexInfo
 
 func main() {
-
 	log.SetLevel(log.DebugLevel)
 
 	flag.Parse()
+
 	root := *destination
 	op := *operation
+
+	startUI()
+	return
 
 	// root = "/home/ahmed/Downloads/cloud computing/"
 	// op = "update"
