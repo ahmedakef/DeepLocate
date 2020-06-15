@@ -1,0 +1,111 @@
+{
+  "_type": "export",
+  "__export_format": 1,
+  "__export_date": "2020-06-14T22:53:18.530Z",
+  "__export_source": "insomnia.chrome.app:v2.7.0",
+  "items": [
+    {
+      "_type": "request_group",
+      "_id": "grp_1437333314976",
+      "name": "DeepLocate",
+      "environments": {},
+      "requests": [
+        {
+          "_type": "request",
+          "_id": "req_1437333314976",
+          "url": "http://127.0.0.1:8080/clear",
+          "method": "GET",
+          "body": "",
+          "headers": [],
+          "params": [],
+          "authentication": {
+            "_type": "basic",
+            "username": "",
+            "password": ""
+          },
+          "__insomnia": {
+            "format": "json",
+            "panel_width": 0.5
+          },
+          "name": "clear"
+        },
+        {
+          "_type": "request",
+          "_id": "req_1592172229015",
+          "url": "http://127.0.0.1:8080/index?destination=/home/ahmed/Downloads/cloud%20computing&deepScan=true",
+          "method": "GET",
+          "body": "{}",
+          "headers": [],
+          "params": [],
+          "authentication": {
+            "_type": "basic",
+            "username": "",
+            "password": ""
+          },
+          "__insomnia": {
+            "format": "json",
+            "panel_width": 0.5
+          },
+          "name": "index with content"
+        },
+        {
+          "_type": "request",
+          "_id": "req_1592172331534",
+          "url": "http://127.0.0.1:8080/search?q=clock&destination=/home/ahmed/Downloads/cloud%20computing&deepScan=false",
+          "method": "GET",
+          "body": "{}",
+          "headers": [],
+          "params": [],
+          "authentication": {
+            "_type": "basic",
+            "username": "",
+            "password": ""
+          },
+          "__insomnia": {
+            "format": "json",
+            "panel_width": 0.5
+          },
+          "name": "Search"
+        },
+        {
+          "_type": "request",
+          "_id": "req_1592172369240",
+          "url": "http://127.0.0.1:8080/search?q=clock&destination=/home/ahmed/Downloads/cloud%20computing&deepScan=true",
+          "method": "GET",
+          "body": "{}",
+          "headers": [],
+          "params": [],
+          "authentication": {
+            "_type": "basic",
+            "username": "",
+            "password": ""
+          },
+          "__insomnia": {
+            "format": "json",
+            "panel_width": 0.5
+          },
+          "name": "Search with content"
+        },
+        {
+          "_type": "request",
+          "_id": "req_1592172409629",
+          "url": "http://127.0.0.1:8080/update?destination=/home/ahmed/Downloads/cloud%20computing&deepScan=true",
+          "method": "GET",
+          "body": "{}",
+          "headers": [],
+          "params": [],
+          "authentication": {
+            "_type": "basic",
+            "username": "",
+            "password": ""
+          },
+          "__insomnia": {
+            "format": "json",
+            "panel_width": 0.5
+          },
+          "name": "update with content"
+        }
+      ]
+    }
+  ]
+}

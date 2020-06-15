@@ -1,3 +1,4 @@
 # ignore all index files
 *.gob
 dlocate.exe
+dlocate/python/python

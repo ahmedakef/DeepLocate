@@ -9,15 +9,19 @@ go build
 # to index:
 ./dlocate -o index -d /home/ahmed/Downloads/csed/networks
 
+optional: -deepScan to use ML for extacting files content
+
 # to search in file names:
-./dlocate -o searchNames -d /home/ahmed/Downloads/csed/networks -s midterm
+./dlocate -o search -d /home/ahmed/Downloads/csed/networks -s midterm
 
 # to search in file content:
-./dlocate -o searchContent -d /home/ahmed/Downloads/csed/networks -s midterm
+./dlocate -o search -deepScan -d /home/ahmed/Downloads/csed/networks -s midterm
 
 
 # to update:
 ./dlocate -o update -d /home/ahmed/Downloads/cloud\ computing/
+
+optional: -deepScan to use ML for extacting files content
 
 # to clear:
 ./dlocate -o clear

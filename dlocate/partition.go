@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,10 +52,12 @@ func (p *Partition) addDir(path string) {
 			p.metadataTree.Insert(&file)
 			cnt++
 			p.addExtension(file.Extension)
-			//TODO fill content map for other formats
-			if file.Extension == "txt" {
-				invertedIndex.Insert(p.Index, file.Path, readTxt(file.Path))
+
+			if deepScan {
+				content := filesContent[file.Path]
+				invertedIndex.Insert(p.Index, file.Path, content)
 			}
+
 		}
 	}
 	p.FilesNumber += cnt
@@ -77,6 +80,16 @@ func readTxt(path string) map[string]float32 {
 	}
 
 	return fileContent
+}
+
+func (p *Partition) getPartitionFiles() map[string][]string {
+	partitionFiles, ok := indexInfo.filesCache.Get(strconv.Itoa(p.Index))
+	if !ok {
+		pF := readPartitionFilesGob(p.Index)
+		indexInfo.filesCache.Set(strconv.Itoa(p.Index), pF)
+		return pF
+	}
+	return partitionFiles.(map[string][]string)
 }
 
 func (p *Partition) clearDir(path string) {

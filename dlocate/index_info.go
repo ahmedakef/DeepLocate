@@ -19,6 +19,8 @@ type IndexInfo struct {
 	partitionsCache   structure.Cache
 	metaCache         structure.Cache
 	filesCache        structure.Cache
+
+	updatedPartitions map[int]*Partition
 }
 
 func getIndexInfo() IndexInfo {
@@ -35,11 +37,15 @@ func getIndexInfo() IndexInfo {
 			metaCache:         structure.GetCache(100),
 			filesCache:        structure.GetCache(100),
 			Roots:             make([]int, 0),
+			updatedPartitions: make(map[int]*Partition),
 		}
 	}
 	indexInfo.partitionsCache = structure.GetCache(100)
 	indexInfo.metaCache = structure.GetCache(100)
 	indexInfo.filesCache = structure.GetCache(100)
+
+	indexInfo.updatedPartitions = make(map[int]*Partition)
+
 	return indexInfo
 }
 
@@ -99,14 +105,18 @@ func (indexInfo *IndexInfo) clearPartitions() {
 	indexInfo.filesCache.Clear()
 }
 
-func isRoot(path string) int {
+func isRoot(path string) (int, bool) {
+	partitionIndex := directoryPartition.getPathPartition(path)
+
 	for _, root := range indexInfo.Roots {
-		parition := indexInfo.getPartition(root)
-		if parition.Root == path {
-			return root
+		if partitionIndex == root {
+			parition := indexInfo.getPartition(root)
+			if parition.Root == path {
+				return root, true
+			}
 		}
 	}
-	return -1
+	return 0, false
 }
 
 func (indexInfo *IndexInfo) removeRoot(root int) {

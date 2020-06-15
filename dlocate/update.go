@@ -1,44 +1,57 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
-	"strconv"
+	"strings"
 
 	utils "dlocate/osutils"
+	python "dlocate/python"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func update(path string) bool {
-	directoryPartition = getDirectoryPartition()
-	indexInfo = getIndexInfo()
+func update(path string) error {
 
 	if directoryPartition.getPathPartition(path) == -1 {
-		log.Warn("The path hasn't been indexed, index it first")
-		return false
+		message := "The path hasn't been indexed, index it first"
+		log.Warn(message)
+		return errors.New(message)
+	}
+
+	if deepScan {
+		log.Info("get all files content from the machine learning model")
+		log.Info("This should take some minutes ...")
+		python.ExecuteScript("Extract.py", path, &filesContent)
+		log.Info("Finished reading all files content in the given path")
 	}
 
 	filepath.Walk(path, updateIfChanged)
 
 	//delete directories info that was deleted
-
-	for index := 1; index <= indexInfo.CurIndex; index++ {
-		partition := indexInfo.getPartition(index)
+	for _, partition := range indexInfo.updatedPartitions {
+		// partition = indexInfo.getPartition(partitionIndex)
 		for directory, toBeDeleted := range partition.toBeDeleted {
-			if toBeDeleted {
+			directorInSearch := strings.HasPrefix(partition.Root+directory, path+"/")
+			if toBeDeleted && directorInSearch {
 				log.Warnf("Directory %v has been deleted "+
 					"and will be removed from index", directory)
 				partition.clearDir(partition.Root + directory[:len(directory)-1])
 			}
 		}
+		savePartition(partition)
+
 	}
 
 	indexInfo.clearPartitions()
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
 
-	return true
+	message := "finished updateing partitions successfully"
+	log.Info(message)
+
+	return nil
 }
 
 func updateIfChanged(path string, info os.FileInfo, err error) error {
@@ -49,10 +62,17 @@ func updateIfChanged(path string, info os.FileInfo, err error) error {
 
 	if info.IsDir() {
 		partitionIndex := directoryPartition.getPathPartition(path)
-		partition := indexInfo.getPartition(partitionIndex)
+
+		// load partition if not loaded
+		partition, ok := indexInfo.updatedPartitions[partitionIndex]
+		if !ok {
+			p := indexInfo.getPartition(partitionIndex)
+			partition = &p
+			indexInfo.updatedPartitions[partition.Index] = partition
+		}
+
 		if partition.filePaths == nil {
-			partitionFiles, _ := indexInfo.filesCache.Get(strconv.Itoa(partitionIndex))
-			partition.filePaths = partitionFiles.(map[string][]string)
+			partition.filePaths = partition.getPartitionFiles()
 		}
 		if partition.toBeDeleted == nil {
 			partition.toBeDeleted = make(map[string]bool)
@@ -71,7 +91,7 @@ func updateIfChanged(path string, info os.FileInfo, err error) error {
 			log.WithFields(log.Fields{
 				"Path": path,
 			}).Infof("New Directory :")
-			indexDir(path, &partition) // index the directoy and its subdirectories
+			indexDir(path, partition) // index the directoy and its subdirectories
 
 			// update lastchanged as folder is already indexed
 			partition.Directories[relativePath] = lastChanged

@@ -1,25 +1,37 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
+	python "dlocate/python"
 
 	log "github.com/sirupsen/logrus"
 )
 
 const filesLimit = 100
 
-var directoryPartition DirectoryPartition
 var invertedIndex structure.InvertedIndex
 
-func startIndexing(path string) {
-	//load index and check for repeated indexing
-	if isRoot(path) != -1 {
-		return
+func startIndexing(path string) error {
+
+	// check for repeated indexing
+	partitionIndex := directoryPartition.getPathPartition(path)
+	if partitionIndex != -1 {
+		message := "this path have been indexed before, you can try update"
+		log.Info(message)
+		return errors.New(message)
+	}
+
+	if deepScan {
+		log.Info("get all files content from the machine learning model")
+		log.Info("This should take some minutes ...")
+		python.ExecuteScript("Extract.py", path, &filesContent)
+		log.Info("Finished reading all files content in the given path")
 	}
 
 	indexPath(path)
@@ -28,11 +40,15 @@ func startIndexing(path string) {
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
 	invertedIndex.Save()
+
+	message := "finished indexing partitions successfully"
+	log.Info(message)
+
+	return nil
 }
 
 func indexPath(path string) {
 	root := indexInfo.addRoot(path)
-	directoryPartition = getDirectoryPartition()
 	directoryPartition[filepath.ToSlash(path)] = root.Index
 
 	invertedIndex.Load()
@@ -46,8 +62,8 @@ func indexDir(path string, root *Partition) {
 	root.addDir(path)
 	for _, file := range files {
 		if file.IsDir {
-			indexedUnder := isRoot(file.Path)
-			if indexedUnder != -1 {
+			indexedUnder, foundAsRoot := isRoot(file.Path)
+			if foundAsRoot {
 				parition := indexInfo.getPartition(indexedUnder)
 				root.addChild(&parition)
 				indexInfo.removeRoot(indexedUnder)
@@ -74,19 +90,28 @@ func savePartition(partition *Partition) {
 	indexInfo.partitionsCache.Delete(strconv.Itoa(partition.Index))
 	indexInfo.metaCache.Delete(strconv.Itoa(partition.Index))
 	indexInfo.filesCache.Delete(strconv.Itoa(partition.Index))
+
+	partition.printPartition()
+
 }
 
-func clearIndex() {
+func clearIndex() error {
 	os.Remove("indexFiles/directoryPartition.json")
 	err := os.Remove("indexFiles/directoryPartition.gob")
 	if err != nil {
 		log.Error(err)
 	}
+	//clear from memory
+	directoryPartition = make(map[string]int)
+
 	os.Remove("indexFiles/indexInfo.json")
 	err = os.Remove("indexFiles/indexInfo.gob")
 	if err != nil {
 		log.Error(err)
 	}
+	// clear from memory
+	indexInfo = getIndexInfo()
+
 	os.Remove("indexFiles/invertedIndex.json")
 	err = os.Remove("indexFiles/invertedIndex.gob")
 	if err != nil {
@@ -110,4 +135,5 @@ func clearIndex() {
 	}
 
 	log.Info("Index cleared successfully")
+	return nil
 }

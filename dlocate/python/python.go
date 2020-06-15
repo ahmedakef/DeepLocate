@@ -1,30 +1,56 @@
-package main
+package python
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"os/exec"
+
+	log "github.com/sirupsen/logrus"
 )
 
-func main() {
-	cmd := exec.Command("python", "foo.py", "khaled.pdf")
+var pythonDirectory = "../ImageCaptioningAndKeyWordExtraction/"
+
+// ExecuteScript run python script and decode its stdout to object
+func ExecuteScript(scriptName string, parameters string, object interface{}) error {
+	cmd := exec.Command("python", "-W ignore", pythonDirectory+scriptName, parameters)
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return err
 	}
+
 	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return err
 	}
-	var person struct {
-		Name     string
-		FileName string
-	}
-	if err := json.NewDecoder(stdout).Decode(&person); err != nil {
-		log.Fatal(err)
+
+	if err := json.NewDecoder(stdout).Decode(&object); err != nil {
+		log.Error(err)
+		return err
 	}
 	if err := cmd.Wait(); err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return err
 	}
-	fmt.Printf("%s is %s in the disk\n", person.Name, person.FileName)
+	return nil
+}
+
+// Person ahmed
+type Person struct {
+	Name     string
+	FileName string
+}
+
+var filesContent map[string]map[string]float32
+
+func main() {
+
+	ExecuteScript("Extract.py", "/home/ahmed/Downloads/cloud computing/", &filesContent)
+
+	log.Info(filesContent)
+
+	// var person Person
+	// ExecuteScript("foo.py", "funcky", &person)
+	// log.Infof("%s is %s on the disk\n", person.Name, person.FileName)
+
 }
