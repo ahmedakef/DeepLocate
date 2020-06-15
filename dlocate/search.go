@@ -61,7 +61,6 @@ func getPartitionClildren(partitionIndex int, path string) []int {
 // path: directoy to search in
 // searchContent : bool to indicate search content or not
 func find(query, path string, searchContent bool) ([]string, []string) {
-
 	partitionIndex := directoryPartition.getPathPartition(path)
 
 	log.Info("Start searching file names ...")

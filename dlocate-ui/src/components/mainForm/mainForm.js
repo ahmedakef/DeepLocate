@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
+import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid';
-import { Button, Row, Container, Form , ButtonToolbar } from 'react-bootstrap';
+import { Button, Row, Container, Form, ButtonToolbar } from 'react-bootstrap';
 import './mainForm.css';
 
 class MainForm extends Component {
@@ -39,7 +40,11 @@ class MainForm extends Component {
 
   handleSearch = () => {
     console.log(this.state)
-    this.setState({ results: ["random file", "anything", "just for testing"] });
+
+    axios.get('/search?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=false')
+      .then(res => this.setState({ results: res.data.matchedFiles }))
+      .catch(err => console.log(err));
+    //this.setState({ results: ["random file", "anything", "just for testing"] });
   }
 
   handleIndex = () => {
