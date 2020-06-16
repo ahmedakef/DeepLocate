@@ -3,7 +3,6 @@ package main
 import (
 	"strconv"
 	"strings"
-	"time"
 
 	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
@@ -57,20 +56,14 @@ func getPartitionClildren(partitionIndex int, path string) []int {
 	return children
 }
 
-// query: word to search
-// path: directoy to search in
-// searchContent : bool to indicate search content or not
-func find(query, path string, searchContent bool) ([]string, []string) {
-	partitionIndex := directoryPartition.getPathPartition(path)
-
-	log.Info("Start searching file names ...")
-
-	// get all files names in the partition and its children
-	fileNames := getPartitionFiles(partitionIndex, path)
-
-	var matchedFiles []string
-
+func findInFileNames(query string, fileNames []string) map[string]int {
 	scores := make(map[string]int) // map from file path to its score
+	if query == "" {
+		for _, fileName := range fileNames {
+			scores[fileName] = 1
+		}
+		return scores
+	}
 
 	// exact match has high score
 	for _, fileName := range fileNames {
@@ -91,6 +84,24 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 			}
 		}
 	}
+
+	return scores
+}
+
+// query: word to search
+// path: directoy to search in
+// searchContent : bool to indicate search content or not
+func find(query, path string, searchContent bool) ([]string, []string) {
+
+	log.Info("Start searching file names ...")
+
+	// get all files names in this path and its children
+	partitionIndex := directoryPartition.getPathPartition(path)
+	fileNames := getPartitionFiles(partitionIndex, path)
+
+	var matchedFiles []string
+
+	scores := findInFileNames(query, fileNames)
 
 	// score maybe used later to sort of filter first n entries
 	for fileName := range scores {
@@ -121,17 +132,22 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	return matchedFiles, contentMatchedFiles
 }
 
-func metaSearch(partitions []int, startATime time.Time, endATime time.Time, startCTime time.Time, endCTime time.Time, startMTime time.Time, endMTime time.Time, startSize int64, endSize int64, extentions []string) []string {
+func metaSearch(query, path string, searchContent bool, start utils.FileMetadata,
+	end utils.FileMetadata, extentions []string) ([]string, []string) {
+
 	//Size - file size in bytes
 	//CTime - change time (last file name or path change)
 	//MTime - modify time Max(last content change, CTime)
 	//ATime - access time Max(last opened, MTime)
 
 	//time.Date(2019, 1, 1, 20, 34, 58, 651387237, time.UTC)
-	start := utils.FileMetadata{ATime: startATime, CTime: startCTime, MTime: startMTime, Size: startSize}
-	end := utils.FileMetadata{ATime: endATime, CTime: endCTime, MTime: endMTime, Size: endSize}
 
-	var files []string
+	// get all partitions in given path
+	partitionIndex := directoryPartition.getPathPartition(path)
+	partitions := getPartitionClildren(partitionIndex, path)
+
+	var fileNames []string
+	log.Info("Start searching file metadata ...")
 
 	//get parition index:
 	for _, partitionIndex := range partitions {
@@ -146,13 +162,48 @@ func metaSearch(partitions []int, startATime time.Time, endATime time.Time, star
 		filesInfo := tree.SearchPartial(&start, &end)
 
 		for _, file := range filesInfo {
+			// if user hasn't chosed any extention
+			if len(extentions) == 0 {
+				fileNames = append(fileNames, file.Path)
+				continue
+			}
 			for _, extention := range extentions {
 				if extention == file.Extension {
-					files = append(files, file.Path)
+					fileNames = append(fileNames, file.Path)
 					break
 				}
 			}
 		}
 	}
-	return files
+
+	var matchedFiles []string
+
+	scores := findInFileNames(query, fileNames)
+	// score maybe used later to sort of filter first n entries
+	for fileName := range scores {
+		log.WithFields(log.Fields{
+			"fileName": fileName,
+		}).Info("found this file matched")
+		matchedFiles = append(matchedFiles, fileName)
+
+	}
+
+	var contentMatchedFiles []string
+
+	if searchContent {
+		log.Info("Start searching file content ...")
+
+		invertedIndex.Load()
+		contentMatchedFiles = invertedIndex.SearchIn(partitions, query, -1, fileNames)
+
+		for _, fileName := range contentMatchedFiles {
+			log.WithFields(log.Fields{
+				"fileName": fileName,
+			}).Info("found this file content matched")
+
+		}
+
+	}
+
+	return matchedFiles, contentMatchedFiles
 }

@@ -17,9 +17,11 @@ optional: -deepScan to use ML for extacting files content
 # to search in file content:
 ./dlocate -o search -deepScan -d /home/ahmed/Downloads/csed/networks -s midterm
 
+# to search in meatadata:
+./dlocate -o metaSearch -d /home/ahmed/Downloadscsed/networks/ -s clock --deepScan
 
 # to update:
-./dlocate -o update -d /home/ahmed/Downloads/cloud\ computing/
+./dlocate -o update -d /home/ahmed/Downloads/csed/networks
 
 optional: -deepScan to use ML for extacting files content
 
@@ -42,10 +44,13 @@ sudo docker-compose up -d
 sudo docker-compose exec dlocate ./dlocate -o index -d ./indexFiles/testFolder/
 
 # to search in file names
-sudo docker-compose exec dlocate ./dlocate -o searchNames -d ./indexFiles/testFolder/ -s midterm
+sudo docker-compose exec dlocate ./dlocate -o search -d ./indexFiles/testFolder/ -s midterm
 
 # to search in file content
-sudo docker-compose exec dlocate ./dlocate -o searchContent -d ./indexFiles/testFolder/ -s midterm
+sudo docker-compose exec dlocate ./dlocate -o search -deepScan -d ./indexFiles/testFolder/ -s midterm
+
+# to search in meatadata
+sudo docker-compose exec dlocate ./dlocate -o metaSearch -d ./indexFiles/testFolder/ -s midterm
 
 # to update
 sudo docker-compose exec dlocate ./dlocate -o update -d ./indexFiles/testFolder/

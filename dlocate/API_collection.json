@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 1,
-  "__export_date": "2020-06-14T22:53:18.530Z",
+  "__export_date": "2020-06-16T18:07:03.846Z",
   "__export_source": "insomnia.chrome.app:v2.7.0",
   "items": [
     {
@@ -104,6 +104,25 @@
             "panel_width": 0.5
           },
           "name": "update with content"
+        },
+        {
+          "_type": "request",
+          "_id": "req_1592330800278",
+          "url": "http://127.0.0.1:8080/metaSearch?q=clock&destination=/home/ahmed/Downloads/cloud%20computing&deepScan=true&extentions=txt,pdf&Atime=2014-11-12T11:45&startSize=2&endSize=800000",
+          "method": "GET",
+          "body": "{}",
+          "headers": [],
+          "params": [],
+          "authentication": {
+            "_type": "basic",
+            "username": "",
+            "password": ""
+          },
+          "__insomnia": {
+            "format": "json",
+            "panel_width": 0.5
+          },
+          "name": "metadataSearch"
         }
       ]
     }

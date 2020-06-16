@@ -1,8 +1,11 @@
 package main
 
 import (
+	utils "dlocate/osutils"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -13,6 +16,7 @@ func startServer() {
 	http.HandleFunc("/index", indexWeb)
 	http.HandleFunc("/clear", clearWeb)
 	http.HandleFunc("/update", updateWeb)
+	http.HandleFunc("/metaSearch", metaSearchWeb)
 
 	port := "8080"
 
@@ -130,6 +134,89 @@ func updateWeb(w http.ResponseWriter, r *http.Request) {
 		"message": "finished updateing partitions successfully",
 	}
 	respondWithJSON(w, http.StatusOK, message)
+
+}
+
+func metaSearchWeb(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+
+	var err error
+	requiredFields := []string{"q", "destination", "deepScan"}
+	err = checkKeysExits(r, requiredFields)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	query := r.FormValue("q")
+	destination := r.FormValue("destination")
+	deepScanParam := r.FormValue("deepScan")
+
+	deepScan, err = strconv.ParseBool(deepScanParam)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	start := utils.FileMetadata{}
+	end := utils.FileMetadata{}
+	extentionsParam := r.FormValue("extentions")
+
+	var extentions []string
+	if len(extentionsParam) > 0 {
+		extentions = strings.Split(extentionsParam, ",")
+	}
+
+	var t time.Time
+
+	if len(r.FormValue("ATime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("ATime"))
+		start.ATime = t
+	}
+	if len(r.FormValue("CTime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("CTime"))
+		start.CTime = t
+	}
+	if len(r.FormValue("MTime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("MTime"))
+		start.MTime = t
+	}
+
+	if len(r.FormValue("ATime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("ATime"))
+		end.ATime = t
+	}
+	if len(r.FormValue("CTime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("CTime"))
+		end.CTime = t
+	}
+	if len(r.FormValue("MTime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("MTime"))
+		end.MTime = t
+	}
+
+	if len(r.FormValue("startSize")) > 0 {
+		startSize, _ := strconv.Atoi(r.FormValue("startSize"))
+		start.Size = int64(startSize)
+	}
+
+	if len(r.FormValue("endSize")) > 0 {
+		endSize, _ := strconv.Atoi(r.FormValue("endSize"))
+		end.Size = int64(endSize)
+	}
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	matchedFiles, contentMatchedFiles := metaSearch(query, destination, deepScan,
+		start, end, extentions)
+
+	files := map[string][]string{
+		"matchedFiles":        matchedFiles,
+		"contentMatchedFiles": contentMatchedFiles,
+	}
+	respondWithJSON(w, http.StatusOK, files)
 
 }
 
