@@ -21,6 +21,7 @@ func startServer() {
 }
 
 func searchWeb(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 
 	requiredFields := []string{"q", "destination", "deepScan"}
 	err := checkKeysExits(r, requiredFields)
@@ -50,6 +51,7 @@ func searchWeb(w http.ResponseWriter, r *http.Request) {
 }
 
 func indexWeb(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 
 	requiredFields := []string{"destination", "deepScan"}
 	err := checkKeysExits(r, requiredFields)
@@ -82,6 +84,7 @@ func indexWeb(w http.ResponseWriter, r *http.Request) {
 }
 
 func clearWeb(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 
 	err := clearIndex()
 
@@ -98,6 +101,7 @@ func clearWeb(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateWeb(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 
 	requiredFields := []string{"destination", "deepScan"}
 	err := checkKeysExits(r, requiredFields)
@@ -127,4 +131,8 @@ func updateWeb(w http.ResponseWriter, r *http.Request) {
 	}
 	respondWithJSON(w, http.StatusOK, message)
 
+}
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }

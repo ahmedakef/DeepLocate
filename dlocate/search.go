@@ -61,7 +61,6 @@ func getPartitionClildren(partitionIndex int, path string) []int {
 // path: directoy to search in
 // searchContent : bool to indicate search content or not
 func find(query, path string, searchContent bool) ([]string, []string) {
-
 	partitionIndex := directoryPartition.getPathPartition(path)
 
 	log.Info("Start searching file names ...")
@@ -122,32 +121,38 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	return matchedFiles, contentMatchedFiles
 }
 
-func metaSearch() []string {
+func metaSearch(partitions []int, startATime time.Time, endATime time.Time, startCTime time.Time, endCTime time.Time, startMTime time.Time, endMTime time.Time, startSize int64, endSize int64, extentions []string) []string {
 	//Size - file size in bytes
 	//CTime - change time (last file name or path change)
 	//MTime - modify time Max(last content change, CTime)
 	//ATime - access time Max(last opened, MTime)
 
-	start := utils.FileMetadata{ATime: time.Date(2019, 1, 1, 20, 34, 58, 651387237, time.UTC)}
-	end := utils.FileMetadata{}
-
-	//get parition index:
-	partitionIndex := 0
-	val, ok := indexInfo.metaCache.Get(strconv.Itoa(partitionIndex))
-	var tree structure.KDTree
-	if !ok {
-		tree = readPartitionMetaGob(partitionIndex)
-		indexInfo.metaCache.Set(strconv.Itoa(partitionIndex), tree)
-	} else {
-		tree = val.(structure.KDTree)
-	}
-	filesInfo := tree.SearchPartial(&start, &end)
+	//time.Date(2019, 1, 1, 20, 34, 58, 651387237, time.UTC)
+	start := utils.FileMetadata{ATime: startATime, CTime: startCTime, MTime: startMTime, Size: startSize}
+	end := utils.FileMetadata{ATime: endATime, CTime: endCTime, MTime: endMTime, Size: endSize}
 
 	var files []string
 
-	for _, file := range filesInfo {
-		files = append(files, file.Path)
-	}
+	//get parition index:
+	for _, partitionIndex := range partitions {
+		val, ok := indexInfo.metaCache.Get(strconv.Itoa(partitionIndex))
+		var tree structure.KDTree
+		if !ok {
+			tree = readPartitionMetaGob(partitionIndex)
+			indexInfo.metaCache.Set(strconv.Itoa(partitionIndex), tree)
+		} else {
+			tree = val.(structure.KDTree)
+		}
+		filesInfo := tree.SearchPartial(&start, &end)
 
+		for _, file := range filesInfo {
+			for _, extention := range extentions {
+				if extention == file.Extension {
+					files = append(files, file.Path)
+					break
+				}
+			}
+		}
+	}
 	return files
 }

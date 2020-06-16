@@ -14,7 +14,6 @@ var filesContent map[string]map[string]float32
 var deepScan bool
 
 func main() {
-
 	log.SetLevel(log.DebugLevel)
 
 	var operation, destination, searchWord string
