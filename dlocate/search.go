@@ -58,6 +58,12 @@ func getPartitionClildren(partitionIndex int, path string) []int {
 
 func findInFileNames(query string, fileNames []string) map[string]int {
 	scores := make(map[string]int) // map from file path to its score
+	if query == "" {
+		for _, fileName := range fileNames {
+			scores[fileName] = 1
+		}
+		return scores
+	}
 
 	// exact match has high score
 	for _, fileName := range fileNames {
@@ -156,6 +162,11 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 		filesInfo := tree.SearchPartial(&start, &end)
 
 		for _, file := range filesInfo {
+			// if user hasn't chosed any extention
+			if len(extentions) == 0 {
+				fileNames = append(fileNames, file.Path)
+				continue
+			}
 			for _, extention := range extentions {
 				if extention == file.Extension {
 					fileNames = append(fileNames, file.Path)
