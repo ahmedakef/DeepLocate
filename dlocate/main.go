@@ -1,8 +1,10 @@
 package main
 
 import (
+	utils "dlocate/osutils"
 	"flag"
 	"path/filepath"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -45,6 +47,12 @@ func main() {
 		update(destination)
 	} else if operation == "search" {
 		find(searchWord, destination, deepScan)
+	} else if operation == "metaSearch" {
+		oneYearAgo := time.Now().Add(-1 * time.Hour * 24 * 365)
+		start := utils.FileMetadata{ATime: oneYearAgo, CTime: oneYearAgo, MTime: oneYearAgo, Size: 2}
+		end := utils.FileMetadata{ATime: time.Now(), CTime: time.Now(), MTime: time.Now(), Size: 800000}
+		extentions := []string{"txt", "pdf"}
+		metaSearch(searchWord, destination, deepScan, start, end, extentions)
 	} else if operation == "web" {
 		startServer()
 	} else {

@@ -49,18 +49,21 @@ func readPartitionFilesGob(partitionIndex int) map[string][]string {
 
 func savePartitionMetaGob(partitionIndex int, tree structure.KDTree) {
 
+	path := "indexFiles/metadata/m" + strconv.Itoa(partitionIndex)
+
 	// the app haven't loaded the metadata
-	if tree.Root == nil {
+	_, err := os.Stat(path)
+	fileExits := !os.IsNotExist(err)
+	if tree.Root == nil && fileExits {
 		return
 	}
+
 	metadataPath := filepath.FromSlash("indexFiles/metadata/")
-	if _, err := os.Stat(metadataPath); os.IsNotExist(err) {
+	if _, err = os.Stat(metadataPath); os.IsNotExist(err) {
 		os.MkdirAll(metadataPath, os.ModePerm)
 	}
 
-	path := "indexFiles/metadata/m" + strconv.Itoa(partitionIndex)
-
-	err := utils.SaveGob(tree, path+".gob")
+	err = utils.SaveGob(tree, path+".gob")
 
 	if err != nil {
 		log.Error("Error while creating files metadata tree")
@@ -75,7 +78,7 @@ func readPartitionMetaGob(partitionIndex int) structure.KDTree {
 	var tree structure.KDTree
 	err := utils.ReadGob(path, &tree)
 	if err != nil {
-		log.Error("Error while reading files metadata tree")
+		log.Errorf("Error while reading files metadata tree for partition %v", partitionIndex)
 		os.Exit(1)
 	}
 	return tree

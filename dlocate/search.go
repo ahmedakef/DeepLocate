@@ -3,7 +3,6 @@ package main
 import (
 	"strconv"
 	"strings"
-	"time"
 
 	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
@@ -121,17 +120,22 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	return matchedFiles, contentMatchedFiles
 }
 
-func metaSearch(partitions []int, startATime time.Time, endATime time.Time, startCTime time.Time, endCTime time.Time, startMTime time.Time, endMTime time.Time, startSize int64, endSize int64, extentions []string) []string {
+func metaSearch(query, path string, searchContent bool, start utils.FileMetadata,
+	end utils.FileMetadata, extentions []string) ([]string, []string) {
+
 	//Size - file size in bytes
 	//CTime - change time (last file name or path change)
 	//MTime - modify time Max(last content change, CTime)
 	//ATime - access time Max(last opened, MTime)
 
 	//time.Date(2019, 1, 1, 20, 34, 58, 651387237, time.UTC)
-	start := utils.FileMetadata{ATime: startATime, CTime: startCTime, MTime: startMTime, Size: startSize}
-	end := utils.FileMetadata{ATime: endATime, CTime: endCTime, MTime: endMTime, Size: endSize}
 
-	var files []string
+	// get all partitions in given path
+	partitionIndex := directoryPartition.getPathPartition(path)
+	partitions := getPartitionClildren(partitionIndex, path)
+
+	var matchedFiles []string
+	log.Info("Start searching file metadata ...")
 
 	//get parition index:
 	for _, partitionIndex := range partitions {
@@ -148,11 +152,34 @@ func metaSearch(partitions []int, startATime time.Time, endATime time.Time, star
 		for _, file := range filesInfo {
 			for _, extention := range extentions {
 				if extention == file.Extension {
-					files = append(files, file.Path)
+					matchedFiles = append(matchedFiles, file.Path)
 					break
 				}
 			}
 		}
 	}
-	return files
+	for _, fileName := range matchedFiles {
+		log.WithFields(log.Fields{
+			"fileName": fileName,
+		}).Info("found this file matched")
+	}
+
+	var contentMatchedFiles []string
+
+	if searchContent {
+		log.Info("Start searching file content ...")
+
+		invertedIndex.Load()
+		contentMatchedFiles = invertedIndex.SearchIn(partitions, query, -1, matchedFiles)
+
+		for _, fileName := range contentMatchedFiles {
+			log.WithFields(log.Fields{
+				"fileName": fileName,
+			}).Info("found this file content matched")
+
+		}
+
+	}
+
+	return matchedFiles, contentMatchedFiles
 }
