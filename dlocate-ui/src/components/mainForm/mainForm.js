@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid';
-import { Button, Row, Container, Form, ButtonToolbar } from 'react-bootstrap';
+import { Button, Row, Container, Form, ButtonToolbar, Col } from 'react-bootstrap';
+import DateTimePicker from 'react-datetime-picker';
 import './mainForm.css';
 
 class MainForm extends Component {
@@ -9,15 +10,17 @@ class MainForm extends Component {
     path: '',
     query: '',
     content: false,
-    minSize: -1,
-    maxSize: -1,
+    minSize: 0,
+    maxSize: 0,
+    minSizeUnit: "Byte", 
+    maxSizeUnit: "Byte", 
     extentions: [],
-    minAccessDate: null,
-    maxAccessDate: null,
-    minModifyDate: null,
-    maxModifyDate: null,
-    minChangeDate: null,
-    maxChangeDate: null,
+    minAccessDate: new Date(),
+    maxAccessDate: new Date(),
+    minModifyDate: new Date(),
+    maxModifyDate: new Date(),
+    minChangeDate: new Date(),
+    maxChangeDate: new Date(),
     showAdvanced: false,
     results: [],
   };
@@ -38,36 +41,68 @@ class MainForm extends Component {
     this.setState({ showAdvanced: event.target.checked });
   }
 
+  handleMinSizeChange = (event) => {
+    this.setState({ minSize: event.target.value });
+  }
+
+  handleMaxSizeChange = (event) => {
+    this.setState({ maxSize: event.target.value });
+  }
+
+  handleMinSizeUnitChange = (event) => {
+    this.setState({ minSizeUnit: event.target.value });
+  }
+
+  handleMaxSizeUnitChange = (event) => {
+    this.setState({ maxSizeUnit: event.target.value });
+  }
+
+  handleMinAccessDateChange = date => this.setState({ minAccessDate: date })
+  handleMaxAccessDateChange = date => this.setState({ maxAccessDate: date })
+
+  handleMinModifyDateChange = date => this.setState({ minModifyDate: date })
+  handleMaxModifyDateChange = date => this.setState({ maxModifyDate: date })
+
+  handleMinChangeDateChange = date => this.setState({ minChangeDate: date })
+  handleMaxChangeDateChange = date => this.setState({ maxChangeDate: date })
+
   handleSearch = () => {
     console.log(this.state)
 
-    axios.get('/search?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=false')
+    //TODO: add matched files and content files
+    axios.get('/search?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content)
       .then(res => this.setState({ results: res.data.matchedFiles }))
       .catch(err => console.log(err));
-    //this.setState({ results: ["random file", "anything", "just for testing"] });
   }
 
   handleIndex = () => {
-    console.log(this.state)
+    axios.get('/index?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content)
+      .then(res => console.log(res))
+      .catch(err => console.log(err));
   }
 
   handleUpdate = () => {
-    console.log(this.state)
+    axios.get('/update?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content)
+      .then(res => console.log(res))
+      .catch(err => console.log(err));
   }
 
   render() {
     return (
       <Container>
-
         <Form>
-          <Form.Group controlId="formPath">
-            <Form.Label>Path</Form.Label>
-            <Form.Control type="text" value={this.state.path} onChange={this.handlePathChange} placeholder="Enter path to the folder" />
+          <Form.Group as={Row} controlId="formPath">
+            <Form.Label column sm="2">Path</Form.Label>
+            <Col sm="10">
+              <Form.Control type="text" value={this.state.path} onChange={this.handlePathChange} placeholder="Enter path to the folder" />
+            </Col>
           </Form.Group>
 
-          <Form.Group controlId="formQuery">
-            <Form.Label>Query</Form.Label>
-            <Form.Control type="text" value={this.state.query} onChange={this.handleQueryChange} placeholder="Enter the query to search for" />
+          <Form.Group as={Row} controlId="formQuery">
+            <Form.Label column sm="2">Query</Form.Label>
+            <Col sm="10">
+              <Form.Control type="text" value={this.state.query} onChange={this.handleQueryChange} placeholder="Enter the query to search for" />
+            </Col>
           </Form.Group>
 
           <Form.Check type="checkbox" value={this.state.content} onChange={this.handleContentChange} label="Include Files Contents" />
@@ -75,21 +110,121 @@ class MainForm extends Component {
           <Form.Check type="checkbox" value={this.state.showAdvanced} onChange={this.handleAdvancedChange} label="Advanced" />
         </Form>
 
-        <Row>
-          {this.state.showAdvanced ? <div>test</div> : null}
-        </Row>
+        <Col>
+          {this.state.showAdvanced ?
+            <Container>
+              <Row>
+                <Form.Group as={Row} controlId="formSize">
+                  <Form.Label column sm="1">Size</Form.Label>
+                  <Col sm="3">
+                    <Form.Control type="number" value={this.state.minSize} onChange={this.handleMinSizeChange} />
+                  </Col>
+                  <Col sm="2">
+                    <Form.Control as="select" onChange={this.handleMinSizeUnitChange} value={this.state.minSizeUnit} custom>
+                      <option>Byte</option>
+                      <option>KB</option>
+                      <option>MB</option>
+                      <option>GB</option>
+                      <option>TB</option>
+                    </Form.Control>
+                  </Col>
+                  <Col sm="1">
+                    <span> To </span>
+                  </Col>
+                  <Col sm="3">
+                    <Form.Control type="number" value={this.state.maxSize} onChange={this.handleMaxSizeChange} />
+                  </Col>
+                  <Col sm="2">
+                    <Form.Control as="select" onChange={this.handleMaxSizeUnitChange} value={this.state.maxSizeUnit} custom>
+                      <option>Byte</option>
+                      <option>KB</option>
+                      <option>MB</option>
+                      <option>GB</option>
+                      <option>TB</option>
+                    </Form.Control>
+                  </Col>
+                </Form.Group>
+              </Row>
+              <Row>
+                <Col>
+                  <span>Access Time:</span>
+                </Col>
+                <Col>
+                  <DateTimePicker
+                    onChange={this.handleMinAccessDateChange}
+                    value={this.state.minAccessDate}
+                  />
+                </Col>
+                <Col>
+                  <span> To </span>
+                </Col>
+                <Col>
+                  <DateTimePicker
+                    onChange={this.handleMaxAccessDateChange}
+                    value={this.state.maxAccessDate}
+                  />
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <span>Modify Time:</span>
+                </Col>
+                <Col>
+                  <DateTimePicker
+                    onChange={this.handleMinModifyDateChange}
+                    value={this.state.minModifyDate}
+                  />
+                </Col>
+                <Col>
+                  <span> To </span>
+                </Col>
+                <Col>
+                  <DateTimePicker
+                    onChange={this.handleMaxModifyDateChange}
+                    value={this.state.maxModifyDate}
+                  />
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <span>Change Time:</span>
+                </Col>
+                <Col>
+                  <DateTimePicker
+                    onChange={this.handleMinChangeDateChange}
+                    value={this.state.minChangeDate}
+                  />
+                </Col>
+                <Col>
+                  <span> To </span>
+                </Col>
+                <Col>
+                  <DateTimePicker
+                    onChange={this.handleMaxChangeDateChange}
+                    value={this.state.maxChangeDate}
+                  />
+                </Col>
+              </Row>
+            </Container> : null}
+        </Col>
 
-        <ButtonToolbar>
-          <Button variant="primary" onClick={this.handleSearch}>Search</Button>
-          <Button variant="primary" onClick={this.handleIndex}>Index</Button>
-          <Button variant="primary" onClick={this.handleUpdate}>Update</Button>
-        </ButtonToolbar>
+        <Row>
+          <Col>
+            <Button variant="primary" size="lg" onClick={this.handleSearch}>Search</Button>
+          </Col>
+          <Col>
+            <Button variant="primary" size="lg" onClick={this.handleIndex}>Index</Button>
+          </Col>
+          <Col>
+            <Button variant="primary" size="lg" onClick={this.handleUpdate}>Update</Button>
+          </Col>
+        </Row>
 
         <div>
           {this.state.results.map(value => <p key={uuidv4()}>{value}</p>)}
         </div>
 
-      </Container>
+      </Container >
     );
   }
 }
