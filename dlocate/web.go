@@ -169,29 +169,29 @@ func metaSearchWeb(w http.ResponseWriter, r *http.Request) {
 
 	var t time.Time
 
-	if len(r.FormValue("ATime")) > 0 {
-		t, err = time.Parse(time.RFC3339, r.FormValue("ATime"))
+	if len(r.FormValue("startATime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("startATime"))
 		start.ATime = t
 	}
-	if len(r.FormValue("CTime")) > 0 {
-		t, err = time.Parse(time.RFC3339, r.FormValue("CTime"))
+	if len(r.FormValue("startCTime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("startCTime"))
 		start.CTime = t
 	}
-	if len(r.FormValue("MTime")) > 0 {
-		t, err = time.Parse(time.RFC3339, r.FormValue("MTime"))
+	if len(r.FormValue("startMTime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("startMTime"))
 		start.MTime = t
 	}
 
-	if len(r.FormValue("ATime")) > 0 {
-		t, err = time.Parse(time.RFC3339, r.FormValue("ATime"))
+	if len(r.FormValue("endATime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("endATime"))
 		end.ATime = t
 	}
-	if len(r.FormValue("CTime")) > 0 {
-		t, err = time.Parse(time.RFC3339, r.FormValue("CTime"))
+	if len(r.FormValue("endCTime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("endCTime"))
 		end.CTime = t
 	}
-	if len(r.FormValue("MTime")) > 0 {
-		t, err = time.Parse(time.RFC3339, r.FormValue("MTime"))
+	if len(r.FormValue("endMTime")) > 0 {
+		t, err = time.Parse(time.RFC3339, r.FormValue("endMTime"))
 		end.MTime = t
 	}
 
