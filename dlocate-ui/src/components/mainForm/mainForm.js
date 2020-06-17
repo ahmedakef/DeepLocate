@@ -12,9 +12,9 @@ class MainForm extends Component {
     content: false,
     minSize: 0,
     maxSize: 0,
-    minSizeUnit: "Byte", 
-    maxSizeUnit: "Byte", 
-    extentions: [],
+    minSizeUnit: "Byte",
+    maxSizeUnit: "Byte",
+    extentions: "",
     minAccessDate: new Date(),
     maxAccessDate: new Date(),
     minModifyDate: new Date(),
@@ -57,6 +57,10 @@ class MainForm extends Component {
     this.setState({ maxSizeUnit: event.target.value });
   }
 
+  handleExtentionChange = (event) => {
+    this.setState({ extentions: event.target.value });
+  }
+
   handleMinAccessDateChange = date => this.setState({ minAccessDate: date })
   handleMaxAccessDateChange = date => this.setState({ maxAccessDate: date })
 
@@ -69,10 +73,20 @@ class MainForm extends Component {
   handleSearch = () => {
     console.log(this.state)
 
-    //TODO: add matched files and content files
-    axios.get('/search?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content)
-      .then(res => this.setState({ results: res.data.matchedFiles }))
-      .catch(err => console.log(err));
+    if (this.state.showAdvanced) {
+      //&Atime=2014-11-12T11:45&startSize=2&endSize=800000"
+      var url = '/metaSearch?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content
+      if (this.state.extentions.length > 0) {
+        url += '&extentions=' + this.state.extentions
+      }
+      axios.get(url)
+        .then(res => this.setState({ results: [...res.data.matchedFiles] }))
+        .catch(err => console.log(err));
+    } else {
+      axios.get('/search?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content)
+        .then(res => this.setState({ results: [...res.data.matchedFiles, ...res.data.contentMatchedFiles] }))
+        .catch(err => console.log(err));
+    }
   }
 
   handleIndex = () => {
@@ -113,38 +127,42 @@ class MainForm extends Component {
         <Col>
           {this.state.showAdvanced ?
             <Container>
-              <Row>
-                <Form.Group as={Row} controlId="formSize">
-                  <Form.Label column sm="1">Size</Form.Label>
-                  <Col sm="3">
-                    <Form.Control type="number" value={this.state.minSize} onChange={this.handleMinSizeChange} />
-                  </Col>
-                  <Col sm="2">
-                    <Form.Control as="select" onChange={this.handleMinSizeUnitChange} value={this.state.minSizeUnit} custom>
-                      <option>Byte</option>
-                      <option>KB</option>
-                      <option>MB</option>
-                      <option>GB</option>
-                      <option>TB</option>
-                    </Form.Control>
-                  </Col>
-                  <Col sm="1">
-                    <span> To </span>
-                  </Col>
-                  <Col sm="3">
-                    <Form.Control type="number" value={this.state.maxSize} onChange={this.handleMaxSizeChange} />
-                  </Col>
-                  <Col sm="2">
-                    <Form.Control as="select" onChange={this.handleMaxSizeUnitChange} value={this.state.maxSizeUnit} custom>
-                      <option>Byte</option>
-                      <option>KB</option>
-                      <option>MB</option>
-                      <option>GB</option>
-                      <option>TB</option>
-                    </Form.Control>
-                  </Col>
-                </Form.Group>
-              </Row>
+              <Form.Group as={Row} controlId="formExtention">
+                <Form.Label column sm="2">Extetnions</Form.Label>
+                <Col sm="10">
+                  <Form.Control type="text" value={this.state.extentions} onChange={this.handleExtentionChange} placeholder="Enter extetntions to filter or leave blank to include all" />
+                </Col>
+              </Form.Group>
+              <Form.Group as={Row} controlId="formSize">
+                <Form.Label column sm="1">Size</Form.Label>
+                <Col sm="3">
+                  <Form.Control type="number" value={this.state.minSize} onChange={this.handleMinSizeChange} />
+                </Col>
+                <Col sm="2">
+                  <Form.Control as="select" onChange={this.handleMinSizeUnitChange} value={this.state.minSizeUnit} custom>
+                    <option>Byte</option>
+                    <option>KB</option>
+                    <option>MB</option>
+                    <option>GB</option>
+                    <option>TB</option>
+                  </Form.Control>
+                </Col>
+                <Col sm="1">
+                  <span> To </span>
+                </Col>
+                <Col sm="3">
+                  <Form.Control type="number" value={this.state.maxSize} onChange={this.handleMaxSizeChange} />
+                </Col>
+                <Col sm="2">
+                  <Form.Control as="select" onChange={this.handleMaxSizeUnitChange} value={this.state.maxSizeUnit} custom>
+                    <option>Byte</option>
+                    <option>KB</option>
+                    <option>MB</option>
+                    <option>GB</option>
+                    <option>TB</option>
+                  </Form.Control>
+                </Col>
+              </Form.Group>
               <Row>
                 <Col>
                   <span>Access Time:</span>
