@@ -99,7 +99,7 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	partitionIndex := directoryPartition.getPathPartition(path)
 	fileNames := getPartitionFiles(partitionIndex, path)
 
-	var matchedFiles []string
+	var matchedFiles = []string{}
 
 	scores := findInFileNames(query, fileNames)
 
@@ -112,7 +112,7 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 
 	}
 
-	var contentMatchedFiles []string
+	var contentMatchedFiles = []string{}
 
 	if searchContent {
 		log.Info("Start searching file content ...")
@@ -176,7 +176,7 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 		}
 	}
 
-	var matchedFiles []string
+	var matchedFiles = []string{}
 
 	scores := findInFileNames(query, fileNames)
 	// score maybe used later to sort of filter first n entries
@@ -188,7 +188,7 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 
 	}
 
-	var contentMatchedFiles []string
+	var contentMatchedFiles = []string{}
 
 	if searchContent {
 		log.Info("Start searching file content ...")
