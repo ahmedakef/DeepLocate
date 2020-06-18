@@ -97,6 +97,11 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 
 	// get all files names in this path and its children
 	partitionIndex := directoryPartition.getPathPartition(path)
+
+	if partitionIndex == -1 {
+		return []string{}, []string{}
+	}
+
 	fileNames := getPartitionFiles(partitionIndex, path)
 
 	var matchedFiles = []string{}
@@ -144,6 +149,11 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 
 	// get all partitions in given path
 	partitionIndex := directoryPartition.getPathPartition(path)
+
+	if partitionIndex == -1 {
+		return []string{}, []string{}
+	}
+
 	partitions := getPartitionClildren(partitionIndex, path)
 
 	var fileNames []string
