@@ -15,15 +15,18 @@ class MainForm extends Component {
     minSizeUnit: "Byte",
     maxSizeUnit: "Byte",
     extentions: "",
-    minAccessDate: new Date(),
-    maxAccessDate: new Date(),
-    minModifyDate: new Date(),
-    maxModifyDate: new Date(),
-    minChangeDate: new Date(),
-    maxChangeDate: new Date(),
+    minAccessDate: null,
+    maxAccessDate: null,
+    minModifyDate: null,
+    maxModifyDate: null,
+    minChangeDate: null,
+    maxChangeDate: null,
     showAdvanced: false,
     results: [],
   };
+
+
+  sizeUnits = { "Byte": 1, "KB": 1024, "MB": 1024 * 1024, "GB": 1024 * 1024 * 1024, "TB": 1024 * 1024 * 1024 * 1024 }
 
   handlePathChange = (event) => {
     this.setState({ path: event.target.value });
@@ -74,13 +77,34 @@ class MainForm extends Component {
     console.log(this.state)
 
     if (this.state.showAdvanced) {
-      //&Atime=2014-11-12T11:45&startSize=2&endSize=800000"
+      //startAtime=2014-11-12T11:45
       var url = '/metaSearch?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content
       if (this.state.extentions.length > 0) {
         url += '&extentions=' + this.state.extentions
       }
+      if (this.state.extentions.length > 0) {
+        url += '&extentions=' + this.state.extentions
+      }
+      if (this.state.minSize > 0)
+        url += '&startSize=' + this.state.minSize * this.sizeUnits[this.state.minSizeUnit]
+      if (this.state.maxSize > 0)
+        url += '&endSize=' + this.state.mixSize * this.sizeUnits[this.state.mixSizeUnit]
+      if (this.state.minAccessDate)
+        url += '&startATime=' + this.state.minAccessDate.toISOString()
+      if (this.state.minModifyDate)
+        url += '&startMTime=' + this.state.minModifyDate.toISOString()
+      if (this.state.minChangeDate)
+        url += '&startCTime=' + this.state.minChangeDate.toISOString()
+      if (this.state.maxAccessDate)
+        url += '&endATime=' + this.state.maxAccessDate.toISOString()
+      if (this.state.maxChangeDate)
+        url += '&endCTime=' + this.state.maxChangeDate.toISOString()
+      if (this.state.maxModifyDate)
+        url += '&endMTime=' + this.state.maxModifyDate.toISOString()
+
+      console.log(url)
       axios.get(url)
-        .then(res => this.setState({ results: [...res.data.matchedFiles] }))
+        .then(res => this.setState({ results: [...res.data.matchedFiles, ...res.data.contentMatchedFiles] }))
         .catch(err => console.log(err));
     } else {
       axios.get('/search?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content)
@@ -90,13 +114,19 @@ class MainForm extends Component {
   }
 
   handleIndex = () => {
-    axios.get('/index?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content)
+    axios.get('/index?destination=' + this.state.path + '&deepScan=' + this.state.content)
       .then(res => console.log(res))
       .catch(err => console.log(err));
   }
 
   handleUpdate = () => {
-    axios.get('/update?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content)
+    axios.get('/update?destination=' + this.state.path + '&deepScan=' + this.state.content)
+      .then(res => console.log(res))
+      .catch(err => console.log(err));
+  }
+
+  handleClear = () => {
+    axios.get('/clear?destination=' + this.state.path)
       .then(res => console.log(res))
       .catch(err => console.log(err));
   }
@@ -235,6 +265,9 @@ class MainForm extends Component {
           </Col>
           <Col>
             <Button variant="primary" size="lg" onClick={this.handleUpdate}>Update</Button>
+          </Col>
+          <Col>
+            <Button variant="primary" size="lg" onClick={this.handleClear}>Clear</Button>
           </Col>
         </Row>
 
