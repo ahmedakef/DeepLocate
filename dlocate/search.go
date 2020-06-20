@@ -117,7 +117,6 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	if searchContent {
 		log.Info("Start searching file content ...")
 
-		invertedIndex.Load()
 		children := getPartitionClildren(partitionIndex, path)
 		contentMatchedFiles = invertedIndex.Search(children, query, -1)
 
@@ -193,7 +192,6 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 	if searchContent {
 		log.Info("Start searching file content ...")
 
-		invertedIndex.Load()
 		contentMatchedFiles = invertedIndex.SearchIn(partitions, query, -1, fileNames)
 
 		for _, fileName := range contentMatchedFiles {

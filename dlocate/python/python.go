@@ -41,13 +41,13 @@ type Person struct {
 	FileName string
 }
 
-var filesContent map[string]map[string]float32
+var content map[string]map[string]float32
 
 func main() {
 
-	ExecuteScript("Extract.py", "/home/ahmed/Downloads/cloud computing/", &filesContent)
+	ExecuteScript("Extract.py", "/home/ahmed/Downloads/cloud computing/", &content)
 
-	log.Info(filesContent)
+	log.Info(content)
 
 	// var person Person
 	// ExecuteScript("foo.py", "funcky", &person)

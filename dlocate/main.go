@@ -1,6 +1,7 @@
 package main
 
 import (
+	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
 	"flag"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 var indexInfo IndexInfo
 var directoryPartition DirectoryPartition
 var filesContent map[string]map[string]float32
+var invertedIndex structure.InvertedIndex
 
 var deepScan bool
 
@@ -38,6 +40,10 @@ func main() {
 
 	indexInfo = getIndexInfo()
 	directoryPartition = getDirectoryPartition()
+
+	if deepScan {
+		invertedIndex.Load()
+	}
 
 	if operation == "index" {
 		startIndexing(destination)
