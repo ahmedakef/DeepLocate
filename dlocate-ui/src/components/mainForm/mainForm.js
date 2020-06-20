@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid';
-import { Button, Row, Container, Form, ButtonToolbar, Col } from 'react-bootstrap';
+import { Button, Row, Container, Form, Col } from 'react-bootstrap';
 import DateTimePicker from 'react-datetime-picker';
+import { TagInput } from 'reactjs-tag-input'
 import './mainForm.css';
 
 class MainForm extends Component {
@@ -14,14 +15,14 @@ class MainForm extends Component {
     maxSize: 0,
     minSizeUnit: "Byte",
     maxSizeUnit: "Byte",
-    extentions: "",
+    extentions: [],
     minAccessDate: null,
     maxAccessDate: null,
     minModifyDate: null,
     maxModifyDate: null,
     minChangeDate: null,
     maxChangeDate: null,
-    showAdvanced: false,
+    showAdvanced: true,
     results: [],
   };
 
@@ -73,17 +74,20 @@ class MainForm extends Component {
   handleMinChangeDateChange = date => this.setState({ minChangeDate: date })
   handleMaxChangeDateChange = date => this.setState({ maxChangeDate: date })
 
+  onTagsChanged = (tags) => {
+    this.setState({ extentions: [...tags] })
+  }
+
   handleSearch = () => {
     console.log(this.state)
 
     if (this.state.showAdvanced) {
-      //startAtime=2014-11-12T11:45
       var url = '/metaSearch?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content
       if (this.state.extentions.length > 0) {
         url += '&extentions=' + this.state.extentions
       }
       if (this.state.extentions.length > 0) {
-        url += '&extentions=' + this.state.extentions
+        url += '&extentions=' + this.state.extentions.join(',')
       }
       if (this.state.minSize > 0)
         url += '&startSize=' + this.state.minSize * this.sizeUnits[this.state.minSizeUnit]
@@ -133,143 +137,159 @@ class MainForm extends Component {
 
   render() {
     return (
-      <Container>
-        <Form>
-          <Form.Group as={Row} controlId="formPath">
-            <Form.Label column sm="2">Path</Form.Label>
+      <Container className="col-12">
+        <Row> <header>DeepLocate</header> </Row>
+        <Form className="mainForm">
+          <Form.Group as={Row} controlId="formPath" className="d-flex align-items-center">
+            <Form.Label column sm="2" className="d-flex align-items-start">Path</Form.Label>
             <Col sm="10">
               <Form.Control type="text" value={this.state.path} onChange={this.handlePathChange} placeholder="Enter path to the folder" />
             </Col>
           </Form.Group>
 
-          <Form.Group as={Row} controlId="formQuery">
-            <Form.Label column sm="2">Query</Form.Label>
+          <Form.Group as={Row} controlId="formQuery" className="d-flex align-items-center">
+            <Form.Label column sm="2" className="d-flex align-items-start">Query</Form.Label>
             <Col sm="10">
               <Form.Control type="text" value={this.state.query} onChange={this.handleQueryChange} placeholder="Enter the query to search for" />
             </Col>
           </Form.Group>
 
-          <Form.Check type="checkbox" value={this.state.content} onChange={this.handleContentChange} label="Include Files Contents" />
+          <Form.Check type="checkbox" value={this.state.content} onChange={this.handleContentChange} label="Include Files Contents" className="d-flex align-items-center" />
 
-          <Form.Check type="checkbox" value={this.state.showAdvanced} onChange={this.handleAdvancedChange} label="Advanced" />
+          <Form.Check id="advanced" type="switch" checked={this.state.showAdvanced} onChange={this.handleAdvancedChange} label="Advanced" />
+
+          <Col>
+            {this.state.showAdvanced ?
+              <Container className="col-12 advanced">
+                <Form.Group as={Row} controlId="formExtention" className="extentions">
+                  <Form.Label column sm="2" className="d-flex">Extetnions</Form.Label>
+                  <Col sm="10">
+                    <TagInput tags={this.state.extentions} onTagsChanged={this.onTagsChanged}
+                      tagStyle={`
+                      background: #E0A800;
+                      `}
+                      wrapperStyle={`
+                      box-shadow: none;
+                      -webkit-appearance: none;
+                      -webkit-border-radius: 5px;
+                      `}
+                      placeholder="Enter extentions to filter files or leave blank to get all" />
+                  </Col>
+                </Form.Group>
+                <Form.Group as={Row} controlId="formSize">
+                  <Form.Label column sm="1" className="d-flex">Size</Form.Label>
+                  <Col sm="3">
+                    <Form.Control type="number" value={this.state.minSize} onChange={this.handleMinSizeChange} />
+                  </Col>
+                  <Col sm="2">
+                    <Form.Control as="select" onChange={this.handleMinSizeUnitChange} value={this.state.minSizeUnit} custom>
+                      <option>Byte</option>
+                      <option>KB</option>
+                      <option>MB</option>
+                      <option>GB</option>
+                      <option>TB</option>
+                    </Form.Control>
+                  </Col>
+                  <Col sm="1">
+                    <span> To </span>
+                  </Col>
+                  <Col sm="3">
+                    <Form.Control type="number" value={this.state.maxSize} onChange={this.handleMaxSizeChange} />
+                  </Col>
+                  <Col sm="2">
+                    <Form.Control as="select" onChange={this.handleMaxSizeUnitChange} value={this.state.maxSizeUnit} custom>
+                      <option>Byte</option>
+                      <option>KB</option>
+                      <option>MB</option>
+                      <option>GB</option>
+                      <option>TB</option>
+                    </Form.Control>
+                  </Col>
+                </Form.Group>
+                <Row>
+                  <Col className="d-flex">
+                    <span>Access Time:</span>
+                  </Col>
+                  <Col>
+                    <DateTimePicker
+                      className="datePicker"
+                      onChange={this.handleMinAccessDateChange}
+                      value={this.state.minAccessDate}
+                    />
+                  </Col>
+                  <Col>
+                    <span> To </span>
+                  </Col>
+                  <Col>
+                    <DateTimePicker
+                      className="datePicker"
+                      onChange={this.handleMaxAccessDateChange}
+                      value={this.state.maxAccessDate}
+                    />
+                  </Col>
+                </Row>
+                <Row>
+                  <Col className="d-flex">
+                    <span>Modify Time:</span>
+                  </Col>
+                  <Col>
+                    <DateTimePicker
+                      className="datePicker"
+                      onChange={this.handleMinModifyDateChange}
+                      value={this.state.minModifyDate}
+                    />
+                  </Col>
+                  <Col>
+                    <span> To </span>
+                  </Col>
+                  <Col>
+                    <DateTimePicker
+                      className="datePicker"
+                      onChange={this.handleMaxModifyDateChange}
+                      value={this.state.maxModifyDate}
+                    />
+                  </Col>
+                </Row>
+                <Row>
+                  <Col className="d-flex">
+                    <span>Change Time:</span>
+                  </Col>
+                  <Col>
+                    <DateTimePicker
+                      className="datePicker"
+                      onChange={this.handleMinChangeDateChange}
+                      value={this.state.minChangeDate}
+                    />
+                  </Col>
+                  <Col>
+                    <span> To </span>
+                  </Col>
+                  <Col>
+                    <DateTimePicker
+                      className="datePicker"
+                      onChange={this.handleMaxChangeDateChange}
+                      value={this.state.maxChangeDate}
+                    />
+                  </Col>
+                </Row>
+              </Container> : null}
+          </Col>
+
+          <Row className="buttons">
+            <Col>
+              <Button variant="warning" size="lg" onClick={this.handleSearch} className="button">Search</Button>
+            </Col>
+            <Col>
+              <Button variant="warning" size="lg" onClick={this.handleIndex} className="button">Index</Button>
+            </Col>
+            <Col>
+              <Button variant="warning" size="lg" onClick={this.handleUpdate} className="button">Update</Button>
+            </Col>
+            <Col>
+              <Button variant="warning" size="lg" onClick={this.handleClear} className="button">Clear</Button>
+            </Col>
+          </Row>
         </Form>
-
-        <Col>
-          {this.state.showAdvanced ?
-            <Container>
-              <Form.Group as={Row} controlId="formExtention">
-                <Form.Label column sm="2">Extetnions</Form.Label>
-                <Col sm="10">
-                  <Form.Control type="text" value={this.state.extentions} onChange={this.handleExtentionChange} placeholder="Enter extetntions to filter or leave blank to include all" />
-                </Col>
-              </Form.Group>
-              <Form.Group as={Row} controlId="formSize">
-                <Form.Label column sm="1">Size</Form.Label>
-                <Col sm="3">
-                  <Form.Control type="number" value={this.state.minSize} onChange={this.handleMinSizeChange} />
-                </Col>
-                <Col sm="2">
-                  <Form.Control as="select" onChange={this.handleMinSizeUnitChange} value={this.state.minSizeUnit} custom>
-                    <option>Byte</option>
-                    <option>KB</option>
-                    <option>MB</option>
-                    <option>GB</option>
-                    <option>TB</option>
-                  </Form.Control>
-                </Col>
-                <Col sm="1">
-                  <span> To </span>
-                </Col>
-                <Col sm="3">
-                  <Form.Control type="number" value={this.state.maxSize} onChange={this.handleMaxSizeChange} />
-                </Col>
-                <Col sm="2">
-                  <Form.Control as="select" onChange={this.handleMaxSizeUnitChange} value={this.state.maxSizeUnit} custom>
-                    <option>Byte</option>
-                    <option>KB</option>
-                    <option>MB</option>
-                    <option>GB</option>
-                    <option>TB</option>
-                  </Form.Control>
-                </Col>
-              </Form.Group>
-              <Row>
-                <Col>
-                  <span>Access Time:</span>
-                </Col>
-                <Col>
-                  <DateTimePicker
-                    onChange={this.handleMinAccessDateChange}
-                    value={this.state.minAccessDate}
-                  />
-                </Col>
-                <Col>
-                  <span> To </span>
-                </Col>
-                <Col>
-                  <DateTimePicker
-                    onChange={this.handleMaxAccessDateChange}
-                    value={this.state.maxAccessDate}
-                  />
-                </Col>
-              </Row>
-              <Row>
-                <Col>
-                  <span>Modify Time:</span>
-                </Col>
-                <Col>
-                  <DateTimePicker
-                    onChange={this.handleMinModifyDateChange}
-                    value={this.state.minModifyDate}
-                  />
-                </Col>
-                <Col>
-                  <span> To </span>
-                </Col>
-                <Col>
-                  <DateTimePicker
-                    onChange={this.handleMaxModifyDateChange}
-                    value={this.state.maxModifyDate}
-                  />
-                </Col>
-              </Row>
-              <Row>
-                <Col>
-                  <span>Change Time:</span>
-                </Col>
-                <Col>
-                  <DateTimePicker
-                    onChange={this.handleMinChangeDateChange}
-                    value={this.state.minChangeDate}
-                  />
-                </Col>
-                <Col>
-                  <span> To </span>
-                </Col>
-                <Col>
-                  <DateTimePicker
-                    onChange={this.handleMaxChangeDateChange}
-                    value={this.state.maxChangeDate}
-                  />
-                </Col>
-              </Row>
-            </Container> : null}
-        </Col>
-
-        <Row>
-          <Col>
-            <Button variant="primary" size="lg" onClick={this.handleSearch}>Search</Button>
-          </Col>
-          <Col>
-            <Button variant="primary" size="lg" onClick={this.handleIndex}>Index</Button>
-          </Col>
-          <Col>
-            <Button variant="primary" size="lg" onClick={this.handleUpdate}>Update</Button>
-          </Col>
-          <Col>
-            <Button variant="primary" size="lg" onClick={this.handleClear}>Clear</Button>
-          </Col>
-        </Row>
 
         <div>
           {this.state.results.map(value => <p key={uuidv4()}>{value}</p>)}
