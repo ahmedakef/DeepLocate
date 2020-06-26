@@ -30,8 +30,9 @@ func main() {
 	flag.Parse()
 
 	// destination = "/home/ahmed/Downloads/cloud computing/"
-	// operation = "web"
+	// operation = "search"
 	// searchWord = "run"
+	// deepScan = false
 
 	// remove trailling backslash
 	if filepath.ToSlash(destination)[len(destination)-1] == '/' {

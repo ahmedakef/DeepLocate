@@ -2,3 +2,4 @@
 *.gob
 dlocate.exe
 dlocate/python/python
+.vscode/

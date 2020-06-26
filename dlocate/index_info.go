@@ -12,7 +12,7 @@ import (
 
 //IndexInfo stores general data about the whole index
 type IndexInfo struct {
-	CurIndex          int
+	CurIndex          int // cuurent index for patitions
 	CurExtensionIndex int
 	Extensions        map[string]int
 	Roots             []int
@@ -112,6 +112,7 @@ func isRoot(path string) (int, bool) {
 		if partitionIndex == root {
 			parition := indexInfo.getPartition(root)
 			if parition.Root == path {
+				// make sure that Root is the same as path
 				return root, true
 			}
 		}
