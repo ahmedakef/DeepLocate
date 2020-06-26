@@ -30,6 +30,9 @@ func getPartitionFiles(partitionIndex int, path string) []string {
 		}
 	}
 	for _, child := range partition.Children {
+		// go func() {
+		// 	fileNames = append(fileNames, getPartitionFiles(child, path)...)
+		// }()
 		fileNames = append(fileNames, getPartitionFiles(child, path)...)
 	}
 
@@ -79,7 +82,9 @@ func findInFileNames(query string, fileNames []string) map[string]int {
 	for _, word := range words {
 
 		for _, fileName := range fileNames {
-			if strings.Contains(fileName, word) {
+			lastslash := strings.LastIndex(fileName, "/")
+			exactFileName := fileName[lastslash+1:]
+			if strings.Contains(exactFileName, word) {
 				scores[fileName]++
 			}
 		}

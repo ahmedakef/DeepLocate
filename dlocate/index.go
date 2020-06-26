@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const filesLimit = 100
+const filesLimit = 10000
 
 func startIndexing(path string) error {
 
