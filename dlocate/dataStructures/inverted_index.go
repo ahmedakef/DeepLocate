@@ -36,7 +36,6 @@ func (invertedIndex *InvertedIndex) Insert(partition int, file string, contents 
 		invertedIndex.savePartitionDir(partition)
 	}
 	for word, freq := range contents {
-
 		invertedIndex.loadPartitionInvertedIndex(partition, word)
 		invertedIndex.content[word][partition][fileID] = freq
 		invertedIndex.savePartitionInvertedIndex(partition, word)
