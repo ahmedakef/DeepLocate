@@ -18,7 +18,7 @@ var invertedIndex structure.InvertedIndex
 var deepScan bool
 
 func main() {
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.InfoLevel)
 
 	var operation, destination, searchWord string
 

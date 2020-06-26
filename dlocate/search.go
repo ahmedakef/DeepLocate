@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -21,14 +22,18 @@ func getPartitionFiles(partitionIndex int, path string) []string {
 
 	partitionFiles := partition.getPartitionFiles()
 
-	fileNames := make([]string, partition.FilesNumber)
+	fileNames := make([]string, partition.FilesNumber+len(partitionFiles))
 	i := 0
 	for path, files := range partitionFiles {
 		for _, fileName := range files {
 			fileNames[i] = partition.Root + path + fileName
 			i++
 		}
+		// search in directoris also
+		fileNames[i] = partition.Root + path[:len(path)-1]
+		i++
 	}
+
 	for _, child := range partition.Children {
 		// go func() {
 		// 	fileNames = append(fileNames, getPartitionFiles(child, path)...)
@@ -98,7 +103,7 @@ func findInFileNames(query string, fileNames []string) map[string]int {
 // searchContent : bool to indicate search content or not
 func find(query, path string, searchContent bool) ([]string, []string) {
 
-	log.Info("Start searching file names ...")
+	log.Debug("Start searching file names ...")
 
 	// get all files names in this path and its children
 	partitionIndex := directoryPartition.getPathPartition(path)
@@ -117,7 +122,8 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	for fileName := range scores {
 		log.WithFields(log.Fields{
 			"fileName": fileName,
-		}).Info("found this file matched")
+		}).Debug("found this file matched")
+		fmt.Println(fileName)
 		matchedFiles = append(matchedFiles, fileName)
 
 	}
@@ -125,15 +131,16 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	var contentMatchedFiles = []string{}
 
 	if searchContent {
-		log.Info("Start searching file content ...")
-
+		log.Debug("Start searching file content ...")
+		fmt.Println("=====\nStart searching file content ...\n=====")
 		children := getPartitionClildren(partitionIndex, path)
 		contentMatchedFiles = invertedIndex.Search(children, query, -1)
 
 		for _, fileName := range contentMatchedFiles {
 			log.WithFields(log.Fields{
 				"fileName": fileName,
-			}).Info("found this file content matched")
+			}).Debug("found this file content matched")
+			fmt.Println(fileName)
 
 		}
 
