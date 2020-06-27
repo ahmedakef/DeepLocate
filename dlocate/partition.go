@@ -95,9 +95,10 @@ func (p *Partition) getPartitionFiles() map[string][]string {
 func (p *Partition) clearDir(path string) {
 
 	relativePath := p.getRelativePath(path)
+	p.FilesNumber -= len(p.filePaths[relativePath])
+
 	delete(p.Directories, relativePath)
 	delete(p.filePaths, relativePath)
-	p.FilesNumber -= len(p.filePaths[relativePath])
 
 	// TODO : remove extensions from p.Extenstion
 }
