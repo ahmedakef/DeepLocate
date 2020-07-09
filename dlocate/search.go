@@ -24,14 +24,18 @@ func getPartitionFiles(partitionIndex int, path string) []string {
 
 	fileNames := make([]string, partition.FilesNumber+len(partitionFiles))
 	i := 0
-	for path, files := range partitionFiles {
+	for directory, files := range partitionFiles {
 		for _, fileName := range files {
-			fileNames[i] = partition.Root + path + fileName
-			i++
+			if strings.HasPrefix(partition.Root+directory, path+"/") {
+				fileNames[i] = partition.Root + directory + fileName
+				i++
+			}
 		}
 		// search in directoris also
-		fileNames[i] = partition.Root + path[:len(path)-1]
-		i++
+		if strings.HasPrefix(partition.Root+directory, path+"/") {
+			fileNames[i] = partition.Root + directory[:len(directory)-1]
+			i++
+		}
 	}
 
 	for _, child := range partition.Children {

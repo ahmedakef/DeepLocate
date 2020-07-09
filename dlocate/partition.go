@@ -58,6 +58,8 @@ func (p *Partition) addDir(path string) {
 				invertedIndex.Insert(p.Index, file.Path, content)
 			}
 
+		} else if _, ok := p.filePaths[relativePath]; !ok {
+			p.filePaths[relativePath] = []string{}
 		}
 	}
 	p.FilesNumber += cnt
