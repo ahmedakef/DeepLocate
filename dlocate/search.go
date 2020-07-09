@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
@@ -11,37 +12,48 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var tokens = make(chan struct{}, 20)
+var wg sync.WaitGroup
+
 // getPartitionFiles gets files of partition and its children
-func getPartitionFiles(partitionIndex int, path string) []string {
-	partition := indexInfo.getPartition(partitionIndex)
+func getPartitionsFiles(partitions []int, path string, fileNamesChan chan string) {
 
-	// check that partition is related to the path
-	if !partition.inSameDirection(path) {
-		return []string{}
-	}
+	for _, partitionIndex := range partitions {
+		partition := indexInfo.getPartition(partitionIndex)
 
-	partitionFiles := partition.getPartitionFiles()
-
-	fileNames := make([]string, partition.FilesNumber+len(partitionFiles))
-	i := 0
-	for path, files := range partitionFiles {
-		for _, fileName := range files {
-			fileNames[i] = partition.Root + path + fileName
-			i++
+		// check that partition is related to the path
+		if !partition.inSameDirection(path) {
+			// return []string{}
+			return
 		}
-		// search in directoris also
-		fileNames[i] = partition.Root + path[:len(path)-1]
-		i++
+
+		var partitionFiles map[string][]string
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			tokens <- struct{}{} // acuire token
+			partitionFiles = partition.getPartitionFiles()
+			<-tokens // release the token
+
+			// fileNames := make([]string, partition.FilesNumber+len(partitionFiles))
+
+			for path, files := range partitionFiles {
+				for _, fileName := range files {
+					fileNamesChan <- partition.Root + path + fileName
+					// fmt.Println(partitionIndex)
+					// fmt.Println(partition.Root + path + fileName)
+					// fileNames[i] = partition.Root + path + fileName
+					// i++
+				}
+				// search in directoris also
+				fileNamesChan <- partition.Root + path[:len(path)-1]
+				// fileNames[i] = partition.Root + path[:len(path)-1]
+				// i++
+			}
+			// os.Exit(1)
+		}()
 	}
 
-	for _, child := range partition.Children {
-		// go func() {
-		// 	fileNames = append(fileNames, getPartitionFiles(child, path)...)
-		// }()
-		fileNames = append(fileNames, getPartitionFiles(child, path)...)
-	}
-
-	return fileNames
 }
 
 // getPartitionClildren get the children of partioin that is related
@@ -64,38 +76,37 @@ func getPartitionClildren(partitionIndex int, path string) []int {
 	return children
 }
 
-func findInFileNames(query string, fileNames []string) map[string]int {
-	scores := make(map[string]int) // map from file path to its score
+func findInFileNames(query string, fileNamesChan chan string, scores chan pair) {
 	if query == "" {
-		for _, fileName := range fileNames {
-			scores[fileName] = 1
+		for fileName := range fileNamesChan {
+			scores <- pair{fileName, 1}
 		}
-		return scores
 	}
 
-	// exact match has high score
-	for _, fileName := range fileNames {
+	words := strings.Fields(query)
+
+	for fileName := range fileNamesChan {
 		lastslash := strings.LastIndex(fileName, "/")
 		exactFileName := fileName[lastslash+1:]
+		score := pair{fileName, 0}
+
+		// exact match has high score
 		if exactFileName == query {
-			scores[fileName] += 10
+			score.second += 10
 		}
-	}
 
-	// partial match
-	words := strings.Fields(query)
-	for _, word := range words {
-
-		for _, fileName := range fileNames {
-			lastslash := strings.LastIndex(fileName, "/")
-			exactFileName := fileName[lastslash+1:]
+		// partial match
+		for _, word := range words {
 			if strings.Contains(exactFileName, word) {
-				scores[fileName]++
+				score.second++
 			}
 		}
+		if score.second > 0 {
+			scores <- score
+		}
+
 	}
 
-	return scores
 }
 
 // query: word to search
@@ -112,19 +123,32 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 		return []string{}, []string{}
 	}
 
-	fileNames := getPartitionFiles(partitionIndex, path)
+	children := getPartitionClildren(partitionIndex, path)
+	fileNamesChan := make(chan string)
 
+	getPartitionsFiles(children, path, fileNamesChan)
+
+	// close(fileNamesChan)
 	var matchedFiles = []string{}
 
-	scores := findInFileNames(query, fileNames)
+	scores := make(chan pair)
+
+	go findInFileNames(query, fileNamesChan, scores)
+
+	go func() {
+		wg.Wait()
+		close(fileNamesChan)
+		close(scores)
+
+	}()
 
 	// score maybe used later to sort of filter first n entries
-	for fileName := range scores {
+	for score := range scores {
 		log.WithFields(log.Fields{
-			"fileName": fileName,
+			"fileName": score.first,
 		}).Debug("found this file matched")
-		fmt.Println(fileName)
-		matchedFiles = append(matchedFiles, fileName)
+		fmt.Println(score.first)
+		matchedFiles = append(matchedFiles, score.first)
 
 	}
 
@@ -133,7 +157,7 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	if searchContent {
 		log.Debug("Start searching file content ...")
 		fmt.Println("=====\nStart searching file content ...\n=====")
-		children := getPartitionClildren(partitionIndex, path)
+
 		contentMatchedFiles = invertedIndex.Search(children, query, -1)
 
 		for _, fileName := range contentMatchedFiles {
@@ -168,6 +192,7 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 	partitions := getPartitionClildren(partitionIndex, path)
 
 	var fileNames []string
+	fileNamesChan := make(chan string)
 	log.Info("Start searching file metadata ...")
 
 	//get parition index:
@@ -186,11 +211,13 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 			// if user hasn't chosed any extention
 			if len(extentions) == 0 {
 				fileNames = append(fileNames, file.Path)
+				fileNamesChan <- file.Path
 				continue
 			}
 			for _, extention := range extentions {
 				if extention == file.Extension {
 					fileNames = append(fileNames, file.Path)
+					fileNamesChan <- file.Path
 					break
 				}
 			}
@@ -199,13 +226,14 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 
 	var matchedFiles = []string{}
 
-	scores := findInFileNames(query, fileNames)
+	scores := make(chan pair)
+	findInFileNames(query, fileNamesChan, scores)
 	// score maybe used later to sort of filter first n entries
-	for fileName := range scores {
+	for score := range scores {
 		log.WithFields(log.Fields{
-			"fileName": fileName,
+			"fileName": score.first,
 		}).Info("found this file matched")
-		matchedFiles = append(matchedFiles, fileName)
+		matchedFiles = append(matchedFiles, score.first)
 
 	}
 
@@ -226,4 +254,9 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 	}
 
 	return matchedFiles, contentMatchedFiles
+}
+
+type pair struct {
+	first  string
+	second int
 }
