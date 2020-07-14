@@ -110,6 +110,11 @@ func (p *Partition) addExtension(extension string) {
 	p.Extenstion.setBit(index)
 }
 
+func (p *Partition) hasExtension(extension string) bool {
+	index := indexInfo.getExtensionIndex(extension)
+	return p.Extenstion.getBit(index)
+}
+
 // dirInDirs ensures that root exits inside any of directories
 func (p *Partition) containsDir(root string) bool {
 	for dir := range p.Directories {
@@ -142,14 +147,6 @@ func (p *Partition) getRelativePath(path string) string {
 func (p *Partition) addChild(c *Partition) {
 	p.ExtenstionH.or(c.ExtenstionH)
 	p.Children = append(p.Children, c.Index)
-}
-
-func (p *Partition) hasExtenstion(index int) bool {
-	return p.Extenstion.getBit(index)
-}
-
-func (p *Partition) hasExtenstionH(index int) bool {
-	return p.ExtenstionH.getBit(index)
 }
 
 func (p *Partition) printPartition() {
