@@ -1,6 +1,7 @@
 package main
 
 import (
+	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
 	"flag"
 	"path/filepath"
@@ -12,11 +13,12 @@ import (
 var indexInfo IndexInfo
 var directoryPartition DirectoryPartition
 var filesContent map[string]map[string]float32
+var invertedIndex structure.InvertedIndex
 
 var deepScan bool
 
 func main() {
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.InfoLevel)
 
 	var operation, destination, searchWord string
 
@@ -28,8 +30,9 @@ func main() {
 	flag.Parse()
 
 	// destination = "/home/ahmed/Downloads/cloud computing/"
-	// operation = "web"
+	// operation = "search"
 	// searchWord = "run"
+	// deepScan = false
 
 	// remove trailling backslash
 	if filepath.ToSlash(destination)[len(destination)-1] == '/' {
@@ -38,6 +41,10 @@ func main() {
 
 	indexInfo = getIndexInfo()
 	directoryPartition = getDirectoryPartition()
+
+	if deepScan {
+		invertedIndex.Load()
+	}
 
 	if operation == "index" {
 		startIndexing(destination)

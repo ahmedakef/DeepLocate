@@ -58,6 +58,8 @@ func (p *Partition) addDir(path string) {
 				invertedIndex.Insert(p.Index, file.Path, content)
 			}
 
+		} else if _, ok := p.filePaths[relativePath]; !ok {
+			p.filePaths[relativePath] = []string{}
 		}
 	}
 	p.FilesNumber += cnt
@@ -95,9 +97,10 @@ func (p *Partition) getPartitionFiles() map[string][]string {
 func (p *Partition) clearDir(path string) {
 
 	relativePath := p.getRelativePath(path)
+	p.FilesNumber -= len(p.filePaths[relativePath])
+
 	delete(p.Directories, relativePath)
 	delete(p.filePaths, relativePath)
-	p.FilesNumber -= len(p.filePaths[relativePath])
 
 	// TODO : remove extensions from p.Extenstion
 }

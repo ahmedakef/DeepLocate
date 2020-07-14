@@ -6,16 +6,13 @@ import (
 	"path/filepath"
 	"strconv"
 
-	structure "dlocate/dataStructures"
 	utils "dlocate/osutils"
 	python "dlocate/python"
 
 	log "github.com/sirupsen/logrus"
 )
 
-const filesLimit = 100
-
-var invertedIndex structure.InvertedIndex
+const filesLimit = 10000
 
 func startIndexing(path string) error {
 
@@ -50,8 +47,6 @@ func startIndexing(path string) error {
 func indexPath(path string) {
 	root := indexInfo.addRoot(path)
 	directoryPartition[filepath.ToSlash(path)] = root.Index
-
-	invertedIndex.Load()
 
 	indexDir(path, &root)
 	savePartition(&root)

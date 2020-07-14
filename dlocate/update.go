@@ -47,6 +47,7 @@ func update(path string) error {
 	indexInfo.clearPartitions()
 	directoryPartition.saveAsGob()
 	indexInfo.saveAsGob()
+	invertedIndex.Save()
 
 	message := "finished updateing partitions successfully"
 	log.Info(message)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -21,15 +22,26 @@ func getPartitionFiles(partitionIndex int, path string) []string {
 
 	partitionFiles := partition.getPartitionFiles()
 
-	fileNames := make([]string, partition.FilesNumber)
+	fileNames := make([]string, partition.FilesNumber+len(partitionFiles))
 	i := 0
-	for path, files := range partitionFiles {
+	for directory, files := range partitionFiles {
 		for _, fileName := range files {
-			fileNames[i] = partition.Root + path + fileName
+			if strings.HasPrefix(partition.Root+directory, path+"/") {
+				fileNames[i] = partition.Root + directory + fileName
+				i++
+			}
+		}
+		// search in directoris also
+		if strings.HasPrefix(partition.Root+directory, path+"/") {
+			fileNames[i] = partition.Root + directory[:len(directory)-1]
 			i++
 		}
 	}
+
 	for _, child := range partition.Children {
+		// go func() {
+		// 	fileNames = append(fileNames, getPartitionFiles(child, path)...)
+		// }()
 		fileNames = append(fileNames, getPartitionFiles(child, path)...)
 	}
 
@@ -79,7 +91,9 @@ func findInFileNames(query string, fileNames []string) map[string]int {
 	for _, word := range words {
 
 		for _, fileName := range fileNames {
-			if strings.Contains(fileName, word) {
+			lastslash := strings.LastIndex(fileName, "/")
+			exactFileName := fileName[lastslash+1:]
+			if strings.Contains(exactFileName, word) {
 				scores[fileName]++
 			}
 		}
@@ -93,7 +107,7 @@ func findInFileNames(query string, fileNames []string) map[string]int {
 // searchContent : bool to indicate search content or not
 func find(query, path string, searchContent bool) ([]string, []string) {
 
-	log.Info("Start searching file names ...")
+	log.Debug("Start searching file names ...")
 
 	// get all files names in this path and its children
 	partitionIndex := directoryPartition.getPathPartition(path)
@@ -112,7 +126,8 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	for fileName := range scores {
 		log.WithFields(log.Fields{
 			"fileName": fileName,
-		}).Info("found this file matched")
+		}).Debug("found this file matched")
+		fmt.Println(fileName)
 		matchedFiles = append(matchedFiles, fileName)
 
 	}
@@ -120,16 +135,16 @@ func find(query, path string, searchContent bool) ([]string, []string) {
 	var contentMatchedFiles = []string{}
 
 	if searchContent {
-		log.Info("Start searching file content ...")
-
-		invertedIndex.Load()
+		log.Debug("Start searching file content ...")
+		fmt.Println("=====\nStart searching file content ...\n=====")
 		children := getPartitionClildren(partitionIndex, path)
 		contentMatchedFiles = invertedIndex.Search(children, query, -1)
 
 		for _, fileName := range contentMatchedFiles {
 			log.WithFields(log.Fields{
 				"fileName": fileName,
-			}).Info("found this file content matched")
+			}).Debug("found this file content matched")
+			fmt.Println(fileName)
 
 		}
 
@@ -203,7 +218,6 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 	if searchContent {
 		log.Info("Start searching file content ...")
 
-		invertedIndex.Load()
 		contentMatchedFiles = invertedIndex.SearchIn(partitions, query, -1, fileNames)
 
 		for _, fileName := range contentMatchedFiles {

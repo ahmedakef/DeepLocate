@@ -33,7 +33,7 @@ func ReadGob(path string, object interface{}) error {
 
 //SaveGob save an object from a path in gob format
 func SaveGob(object interface{}, path string) error {
-	saveAsJSON(object, path)
+	// saveAsJSON(object, path)
 
 	// FromSlash converts / to the specific file system separator
 	dataFile, err := os.Create(filepath.FromSlash(path))
