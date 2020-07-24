@@ -139,7 +139,6 @@ func updateWeb(w http.ResponseWriter, r *http.Request) {
 
 func metaSearchWeb(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
-
 	var err error
 	requiredFields := []string{"q", "destination", "deepScan"}
 	err = checkKeysExits(r, requiredFields)
