@@ -82,17 +82,14 @@ class MainForm extends Component {
     console.log(this.state)
 
     if (this.state.showAdvanced) {
-      var url = '/metaSearch?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content
+      var url = 'http://127.0.0.1:8080/metaSearch?q=' + this.state.query + '&destination=' + this.state.path + '&deepScan=' + this.state.content
       if (this.state.extentions.length > 0) {
-        url += '&extentions=' + this.state.extentions
-      }
-      if (this.state.extentions.length > 0) {
-        url += '&extentions=' + this.state.extentions.join(',')
+        url += '&extentions=' + this.state.extentions.map(value => value.displayValue).join(',')
       }
       if (this.state.minSize > 0)
         url += '&startSize=' + this.state.minSize * this.sizeUnits[this.state.minSizeUnit]
       if (this.state.maxSize > 0)
-        url += '&endSize=' + this.state.mixSize * this.sizeUnits[this.state.mixSizeUnit]
+        url += '&endSize=' + this.state.maxSize * this.sizeUnits[this.state.maxSizeUnit]
       if (this.state.minAccessDate)
         url += '&startATime=' + this.state.minAccessDate.toISOString()
       if (this.state.minModifyDate)
@@ -118,19 +115,19 @@ class MainForm extends Component {
   }
 
   handleIndex = () => {
-    axios.get('/index?destination=' + this.state.path + '&deepScan=' + this.state.content)
+    axios.get('http://127.0.0.1:8080/index?destination=' + this.state.path + '&deepScan=' + this.state.content)
       .then(res => console.log(res))
       .catch(err => console.log(err));
   }
 
   handleUpdate = () => {
-    axios.get('/update?destination=' + this.state.path + '&deepScan=' + this.state.content)
+    axios.get('http://127.0.0.1:8080/update?destination=' + this.state.path + '&deepScan=' + this.state.content)
       .then(res => console.log(res))
       .catch(err => console.log(err));
   }
 
   handleClear = () => {
-    axios.get('/clear?destination=' + this.state.path)
+    axios.get('http://127.0.0.1:8080/clear?destination=' + this.state.path)
       .then(res => console.log(res))
       .catch(err => console.log(err));
   }
