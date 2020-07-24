@@ -171,11 +171,27 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 
 	partitions := getPartitionClildren(partitionIndex, path)
 
+	validPartitions := []int{}
+
+	if len(extentions) == 0 {
+		validPartitions = partitions
+	} else {
+		for _, partitionIndex := range partitions {
+			partition := indexInfo.getPartition(partitionIndex)
+			for _, extention := range extentions {
+				if partition.hasExtension(extention) {
+					validPartitions = append(validPartitions, partitionIndex)
+					break
+				}
+			}
+		}
+	}
+
 	var fileNames []string
 	log.Info("Start searching file metadata ...")
 
 	//get parition index:
-	for _, partitionIndex := range partitions {
+	for _, partitionIndex := range validPartitions {
 		val, ok := indexInfo.metaCache.Get(strconv.Itoa(partitionIndex))
 		var tree structure.KDTree
 		if !ok {
@@ -218,7 +234,7 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 	if searchContent {
 		log.Info("Start searching file content ...")
 
-		contentMatchedFiles = invertedIndex.SearchIn(partitions, query, -1, fileNames)
+		contentMatchedFiles = invertedIndex.SearchIn(validPartitions, query, -1, fileNames)
 
 		for _, fileName := range contentMatchedFiles {
 			log.WithFields(log.Fields{
