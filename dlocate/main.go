@@ -61,6 +61,7 @@ func main() {
 		extentions := []string{"txt", "pdf"}
 		metaSearch(searchWord, destination, deepScan, start, end, extentions)
 	} else if operation == "web" {
+		invertedIndex.Load()
 		startServer()
 	} else {
 		log.Info("Please select correct operation")

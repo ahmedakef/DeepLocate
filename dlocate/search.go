@@ -200,6 +200,7 @@ func metaSearch(query, path string, searchContent bool, start utils.FileMetadata
 		} else {
 			tree = val.(structure.KDTree)
 		}
+
 		filesInfo := tree.SearchPartial(&start, &end)
 
 		for _, file := range filesInfo {
