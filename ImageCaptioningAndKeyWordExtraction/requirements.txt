@@ -33,7 +33,7 @@ preshed==3.0.2
 protobuf==3.12.2
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-PyPDF2==1.26.0
+PyPDF2==1.27.5
 python-docx==0.8.10
 PyYAML==5.3.1
 regex==2020.6.8
