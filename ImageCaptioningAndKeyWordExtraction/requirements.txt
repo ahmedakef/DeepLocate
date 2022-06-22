@@ -23,7 +23,7 @@ lxml==4.5.1
 Markdown==3.2.2
 murmurhash==1.0.2
 nltk==3.5
-numpy==1.18.5
+numpy==1.22.0
 oauthlib==3.1.0
 odfpy==1.4.1
 opt-einsum==3.2.1
